@@ -15,8 +15,10 @@ pub mod dado_batten;
 pub mod miter;
 pub mod outfeed;
 pub mod sawhorse;
+pub mod storypole;
 
 pub use dado_batten::*;
 pub use miter::*;
 pub use outfeed::*;
 pub use sawhorse::*;
+pub use storypole::*;

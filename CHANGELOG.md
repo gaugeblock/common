@@ -16,6 +16,10 @@ All notable changes to `gaugeblock/common` are documented here. The format follo
   `ReasoningEffort`, `InferenceRequest`, `InferenceResponse`). Cross-domain references resolve inside
   the crate, and the internally tagged `ExecutionMode` / snake_case enums are covered by wire tests.
   [GB-144]
+- `gaugeblock-contracts`: `storypole` domain (`StorypoleConfig`, `WorkspaceConfig`, `DiscoveredMember`,
+  `TaskNode`, `TaskKind`, `TaskStatus`, `TaskScope`, `TaskEdge`, `EdgeKind`, `TaskDecision`,
+  `DecisionStatus`, `TaskPlan`, `PlanStep`, `AgentClaim`, `HandoffPacket`, `VerificationReceipt`,
+  `TaskContextBriefing`, `LedgerEvent`), including the internally tagged ledger event enum. [GB-145]
 
 ## [v0.1.0-alpha.1] — 2026-10-28
 
