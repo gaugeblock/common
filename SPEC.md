@@ -34,7 +34,7 @@ member -> contracts.
 | Domain | Types | Status |
 |:---|:---|:---|
 | `outfeed` | `ReleasePlan`, `ReleaseStatus`, `CommitInfo`, `ConventionalKind`, `BumpType`, `ManifestDiff`, `SuiteLock`, `SuiteMetadata`, `SuiteToolEntry` | shipped (`GB-141`) |
-| `miter` | `Language`, `SymbolBinding`, `LexicalScope`, `VerificationReport` | `GB-142` |
-| `storypole` | `Task`, `TaskKind`, `TaskScope`, `StorypoleConfig`, `DecisionRecord` | `GB-142` |
-| `sawhorse` | `InferenceRequest`, `InferenceResponse`, `ModelRole` | `GB-142` |
-| `dado` / `batten` | `PatternDeclaration`, `GrammarSpec`, `TokenMask` | `GB-142` |
+| `miter` | `Language`, `SymbolKind`, `SymbolBinding`, `LexicalScope`, `VerificationReport`, `CompilerDiagnostic` | shipped (`GB-144`) |
+| `storypole` | `TaskNode`, `TaskKind`, `TaskStatus`, `TaskScope`, `TaskEdge`, `TaskDecision`, `StorypoleConfig`, `TaskPlan`, `LedgerEvent` and friends | `GB-145` |
+| `sawhorse` | `ExecutionMode`, `ModelRole`, `ReasoningEffort`, `InferenceRequest`, `InferenceResponse` | shipped (`GB-144`) |
+| `dado` / `batten` | `TypedHole`, `DadoPattern`, `CompiledGrammarConstraint`, `GrammarFormat` | shipped (`GB-144`) |
