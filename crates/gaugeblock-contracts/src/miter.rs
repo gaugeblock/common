@@ -2,21 +2,95 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Source language understood by the suite's polyglot extractors.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// A source language or declarative format the suite reads.
+///
+/// This mirrors `miter`'s implemented taxonomy (13 formats), not an aspirational list: a
+/// language appears here only when an extractor exists for it. Wire spelling is the lowercase
+/// `name()` form miter already uses and the `dado` pattern packs already contain.
+///
+/// Deserialization is case-insensitive and accepts the short aliases `rs`, `ts`, `js` and `py`, so
+/// hand-written packs stay lenient while serialization stays canonical.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum Language {
     /// Rust.
     Rust,
-    /// TypeScript / TSX / JavaScript.
+    /// TypeScript.
     TypeScript,
+    /// TSX — TypeScript with JSX.
+    Tsx,
+    /// JavaScript, including the `.mjs` / `.cjs` module flavours.
+    JavaScript,
     /// Python.
     Python,
-    /// Go.
-    Go,
-    /// C.
-    C,
-    /// C++.
-    Cpp,
+    /// SQL DDL: tables, views, indexes and columns.
+    Sql,
+    /// HTML documents: ids, custom elements, templates and landmarks.
+    Html,
+    /// CSS and SCSS: custom properties, selectors, keyframes and layers.
+    Css,
+    /// Markdown: the ATX heading outline.
+    Markdown,
+    /// Dockerfile / Containerfile: stages, build arguments and published ports.
+    Dockerfile,
+    /// Kubernetes and Docker Compose manifests.
+    Yaml,
+    /// HCL / OpenTofu / Terraform: resources, modules and variables.
+    Hcl,
+    /// `.env` key files (values are never recorded).
+    Env,
+}
+
+impl Language {
+    /// Canonical lowercase wire spelling.
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Rust => "rust",
+            Self::TypeScript => "typescript",
+            Self::Tsx => "tsx",
+            Self::JavaScript => "javascript",
+            Self::Python => "python",
+            Self::Sql => "sql",
+            Self::Html => "html",
+            Self::Css => "css",
+            Self::Markdown => "markdown",
+            Self::Dockerfile => "dockerfile",
+            Self::Yaml => "yaml",
+            Self::Hcl => "hcl",
+            Self::Env => "env",
+        }
+    }
+
+    /// Parses a wire spelling case-insensitively, accepting the short aliases.
+    pub fn from_wire(raw: &str) -> Option<Self> {
+        match raw.trim().to_ascii_lowercase().as_str() {
+            "rust" | "rs" => Some(Self::Rust),
+            "typescript" | "ts" => Some(Self::TypeScript),
+            "tsx" => Some(Self::Tsx),
+            "javascript" | "js" => Some(Self::JavaScript),
+            "python" | "py" => Some(Self::Python),
+            "sql" => Some(Self::Sql),
+            "html" => Some(Self::Html),
+            "css" | "scss" => Some(Self::Css),
+            "markdown" | "md" => Some(Self::Markdown),
+            "dockerfile" | "docker" => Some(Self::Dockerfile),
+            "yaml" | "yml" => Some(Self::Yaml),
+            "hcl" | "terraform" => Some(Self::Hcl),
+            "env" => Some(Self::Env),
+            _ => None,
+        }
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Language {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let raw = String::deserialize(deserializer)?;
+        Self::from_wire(&raw)
+            .ok_or_else(|| serde::de::Error::custom(format!("unknown language: {raw}")))
+    }
 }
 
 /// Classification of a symbol binding inside a lexical scope.

@@ -28,7 +28,7 @@ fn test_lexical_scope_roundtrip_and_snake_case_kinds() {
     assert_eq!(scope, parsed);
 
     let value = serde_json::to_value(&scope).expect("value");
-    assert_eq!(value["language"], "Rust");
+    assert_eq!(value["language"], "rust", "wire spelling is lowercase");
     assert_eq!(value["bindings"][0]["kind"], "parameter");
     for key in [
         "repo_relative_path",
@@ -164,4 +164,41 @@ fn test_inference_messages_roundtrip() {
     let json = serde_json::to_string(&response).expect("serialize");
     let parsed: InferenceResponse = serde_json::from_str(&json).expect("deserialize");
     assert_eq!(response, parsed);
+}
+
+#[test]
+fn test_language_wire_spelling_is_lowercase_and_lenient() {
+    for (language, expected) in [
+        (Language::Rust, "rust"),
+        (Language::TypeScript, "typescript"),
+        (Language::Tsx, "tsx"),
+        (Language::JavaScript, "javascript"),
+        (Language::Python, "python"),
+        (Language::Sql, "sql"),
+        (Language::Dockerfile, "dockerfile"),
+        (Language::Markdown, "markdown"),
+    ] {
+        assert_eq!(language.name(), expected);
+        assert_eq!(
+            serde_json::to_string(&language).expect("serialize"),
+            format!("\"{expected}\"")
+        );
+    }
+
+    // Reads are case-insensitive and accept the short aliases used by pattern packs.
+    for (raw, expected) in [
+        ("Rust", Language::Rust),
+        ("rs", Language::Rust),
+        ("TS", Language::TypeScript),
+        ("ts", Language::TypeScript),
+        ("js", Language::JavaScript),
+        ("py", Language::Python),
+        ("yml", Language::Yaml),
+        ("md", Language::Markdown),
+    ] {
+        let parsed: Language = serde_json::from_str(&format!("\"{raw}\"")).expect("deserialize");
+        assert_eq!(parsed, expected, "alias {raw}");
+    }
+
+    assert!(serde_json::from_str::<Language>("\"cobol\"").is_err());
 }
