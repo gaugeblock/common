@@ -34,7 +34,7 @@ pub enum ExecutionMode {
 }
 
 /// The job a model is being asked to do.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelRole {
     /// Spec planning (`chalkline`).
