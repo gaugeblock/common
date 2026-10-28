@@ -13,17 +13,24 @@ the meta-harness `AGENTS.md`; this file records what is specific to `common`.
 4. **`unwrap_used` / `expect_used` are denied** at workspace level; tests opt out with a module-level
    `#![allow(clippy::unwrap_used, clippy::expect_used)]`.
 
-## 2. Workflow
+## 2. Tiered Verification Matrix
+
+* **Tier 1 (inner loop):** `cargo check -p gaugeblock-contracts` while iterating.
+* **Tier 2 (atomic commit gate):** `cargo fmt --all -- --check`,
+  `cargo clippy --workspace --all-targets -- -D warnings`, and
+  `cargo nextest run --workspace`.
+* **Tier 3 (task completion gate):** Tier 2 plus `chalkline docs check -d common` and
+  `miter contracts` run from the meta-harness root.
+* **Tier 4 (release gate):** the full suite matrix across all workspace targets before tagging.
+
+## 3. Workflow
 
 * Claim the ticket in Storypole before touching code, work on a branch, and defer anything out of
   scope with `storypole defer` instead of fixing it inline.
-* Tier 1 while iterating: `cargo check -p gaugeblock-contracts`.
-* Tier 2 before committing: `cargo fmt --all -- --check`,
-  `cargo clippy --workspace --all-targets -- -D warnings`, `cargo nextest run --workspace`.
-* Records: Conventional Commits, `docs:` for documentation-only, task key in the footer
-  (`Task: GB-141`).
+* Conventional Commits with the crate scope; documentation-only changes use `docs:`; put the task key
+  in the footer (`Task: GB-141`).
 
-## 3. Versioning
+## 4. Versioning
 
 Reservations publish at `0.1.0-alpha.1`; the workspace is at `0.1.0-beta.1` because it is dogfood-ready.
 Removing or renaming a published field is a breaking change and bumps the minor base.
