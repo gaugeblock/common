@@ -192,3 +192,26 @@ pub struct TaskContextBriefing {
     /// Deferred issues whose scope overlaps this task.
     pub known_deferred_issues_in_scope: Vec<(String, String)>,
 }
+
+impl TaskEdge {
+    /// Builds an edge without cached target metadata.
+    pub fn new(kind: EdgeKind, target_id: Uuid) -> Self {
+        Self {
+            kind,
+            target_id,
+            target_ticket_key: None,
+            target_repo: None,
+        }
+    }
+
+    /// Attaches cached target metadata for cross-repository rendering.
+    pub fn with_target_meta(
+        mut self,
+        ticket_key: impl Into<String>,
+        repo: Option<impl Into<String>>,
+    ) -> Self {
+        self.target_ticket_key = Some(ticket_key.into());
+        self.target_repo = repo.map(|r| r.into());
+        self
+    }
+}
