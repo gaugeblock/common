@@ -6,12 +6,15 @@ use uuid::Uuid;
 use super::continuity::{AgentClaim, HandoffPacket, TaskPlan, VerificationReceipt};
 
 /// Category of backlog work item.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+///
+/// `Feature` is the default, which is what `CreateTaskParams` assumes when a caller names no kind.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum TaskKind {
     /// Grouping task that owns child work packages.
     Epic,
     /// New capability.
+    #[default]
     Feature,
     /// Behaviour-preserving restructuring.
     Refactor,
