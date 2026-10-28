@@ -94,3 +94,10 @@ pub struct VerificationReceipt {
     #[serde(default)]
     pub commit_shas: Vec<String>,
 }
+
+impl AgentClaim {
+    /// Returns true once the lease has expired at `current_epoch_ms`.
+    pub fn is_expired(&self, current_epoch_ms: u64) -> bool {
+        current_epoch_ms >= self.lease_expires_at_epoch_ms
+    }
+}

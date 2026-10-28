@@ -11,6 +11,11 @@
 Every type is a plain data carrier: no file, network or process access, and no dependency that compiles
 C or C++. The crate must build on any platform the suite supports without a toolchain beyond rustc.
 
+Behaviour travels with the type, but only *pure* behaviour: infallible builders (`InferenceRequest::new`,
+`TypedHole::new`), formatting (`Display for GrammarFormat`) and value predicates
+(`AgentClaim::is_expired`). No function here may perform I/O, spawn a process, or read a clock — anything
+that needs the outside world belongs to the member crate that owns that concern.
+
 ### Invariant 2: Wire fidelity
 Serialized field names, variant names and optional-field behaviour match `CONTRACTS.md` exactly.
 Optional fields marked as omit-when-absent stay absent from the wire (`skip_serializing_if`).

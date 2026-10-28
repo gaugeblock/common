@@ -100,3 +100,45 @@ pub struct InferenceResponse {
     /// Tokens consumed by reasoning, when reported.
     pub reasoning_tokens: Option<u32>,
 }
+
+impl InferenceRequest {
+    /// Builds a deterministic prompt request for `role` (temperature `0.0`, 1024 tokens).
+    pub fn new(role: ModelRole, prompt: impl Into<String>) -> Self {
+        Self {
+            role,
+            prompt: prompt.into(),
+            system_prompt: None,
+            grammar_constraint: None,
+            grammar_format: None,
+            max_tokens: 1024,
+            temperature: 0.0,
+            reasoning_effort: None,
+        }
+    }
+
+    /// Sets the reasoning effort level.
+    pub fn with_reasoning_effort(mut self, effort: ReasoningEffort) -> Self {
+        self.reasoning_effort = Some(effort);
+        self
+    }
+
+    /// Attaches a GBNF grammar constraint.
+    pub fn with_gbnf_grammar(mut self, grammar: impl Into<String>) -> Self {
+        self.grammar_constraint = Some(grammar.into());
+        self.grammar_format = Some(GrammarFormat::Gbnf);
+        self
+    }
+
+    /// Attaches a Lark grammar constraint.
+    pub fn with_lark_grammar(mut self, grammar: impl Into<String>) -> Self {
+        self.grammar_constraint = Some(grammar.into());
+        self.grammar_format = Some(GrammarFormat::Lark);
+        self
+    }
+
+    /// Attaches an optional system prompt.
+    pub fn with_system_prompt(mut self, system: impl Into<String>) -> Self {
+        self.system_prompt = Some(system.into());
+        self
+    }
+}

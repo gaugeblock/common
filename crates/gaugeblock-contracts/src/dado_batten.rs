@@ -41,7 +41,7 @@ pub struct DadoPattern {
 }
 
 /// Grammar dialect used to constrain a hole.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GrammarFormat {
     /// GBNF grammar (llama.cpp family).
@@ -63,4 +63,31 @@ pub struct CompiledGrammarConstraint {
     pub grammar_definition: String,
     /// Identifiers the grammar accepts at this hole.
     pub allowed_identifiers: Vec<String>,
+}
+
+impl TypedHole {
+    /// Creates a hole with the suite defaults (64 tokens, literals allowed).
+    pub fn new(
+        hole_id: impl Into<String>,
+        expected_type: impl Into<String>,
+        ast_node_kind: impl Into<String>,
+    ) -> Self {
+        Self {
+            hole_id: hole_id.into(),
+            expected_type: expected_type.into(),
+            ast_node_kind: ast_node_kind.into(),
+            max_tokens: 64,
+            allow_literals: true,
+        }
+    }
+}
+
+impl std::fmt::Display for GrammarFormat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Gbnf => write!(f, "gbnf"),
+            Self::Lark => write!(f, "lark"),
+            Self::Regex => write!(f, "regex"),
+        }
+    }
 }
