@@ -1,6 +1,7 @@
 //! `dado` and `batten` wire domain: pattern templates, typed holes and grammar constraints.
 
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 use crate::miter::Language;
 
@@ -34,6 +35,9 @@ pub struct DadoPattern {
     pub required_imports: Vec<String>,
     /// Holes the synthesis model must fill.
     pub holes: Vec<TypedHole>,
+    /// Example valid fills per hole, used for deterministic self-testing.
+    #[serde(default)]
+    pub canonical_example_fills: BTreeMap<String, String>,
 }
 
 /// Grammar dialect used to constrain a hole.

@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::continuity::{AgentClaim, HandoffPacket, VerificationReceipt};
+use super::continuity::{AgentClaim, HandoffPacket, TaskPlan, VerificationReceipt};
 use super::task::{TaskDecision, TaskEdge, TaskNode, TaskScope, TaskStatus};
 
 /// Immutable append-only event written to the ledger.
@@ -133,6 +133,15 @@ pub enum LedgerEvent {
         parent_task_id: Uuid,
         /// Children created by the split.
         spawned_children: Vec<TaskNode>,
+        /// Mutation timestamp in epoch milliseconds.
+        timestamp_ms: u64,
+    },
+    /// An execution plan was attached or updated.
+    PlanUpdated {
+        /// Task the plan belongs to.
+        task_id: Uuid,
+        /// The plan as stored.
+        plan: TaskPlan,
         /// Mutation timestamp in epoch milliseconds.
         timestamp_ms: u64,
     },

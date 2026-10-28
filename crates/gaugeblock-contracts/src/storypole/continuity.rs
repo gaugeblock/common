@@ -69,22 +69,28 @@ pub struct HandoffPacket {
 /// Evidence required to transition a task into `TaskStatus::Verified`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VerificationReceipt {
-    /// Command that was executed.
-    pub command_executed: String,
-    /// Process exit code.
-    pub exit_code: i32,
-    /// Number of tests that passed, when the command ran a suite.
-    pub passed_tests_count: Option<u32>,
-    /// Human-readable verification summary.
+    /// Tool or system that ran verification (e.g. `miter-engine`, `cargo-test`, `human`).
+    pub verifier: String,
+    /// Exact command or suite executed.
+    pub command: String,
+    /// Process exit code; `0` indicates success.
+    pub exit_code: Option<i32>,
+    /// Count of compiler warnings or diagnostics emitted.
+    pub diagnostic_count: Option<u32>,
+    /// Execution output summary or stdout/stderr snippet.
     pub summary: String,
     /// Verification timestamp in epoch milliseconds.
     pub verified_at_epoch_ms: u64,
-    /// Branch the verification ran on.
+    /// Branch verification ran on.
+    #[serde(default)]
     pub git_branch: Option<String>,
     /// Commit the branch started from.
+    #[serde(default)]
     pub base_commit_sha: Option<String>,
-    /// Commit verified, when known.
+    /// Certified head commit.
+    #[serde(default)]
     pub head_commit_sha: Option<String>,
-    /// Commits covered by the verification.
+    /// Ordered commits covering the branch delta.
+    #[serde(default)]
     pub commit_shas: Vec<String>,
 }

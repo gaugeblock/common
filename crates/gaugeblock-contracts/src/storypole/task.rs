@@ -19,10 +19,8 @@ pub enum TaskKind {
     Bug,
     /// Technical debt or maintenance.
     TechDebt,
-    /// Unresolved architectural decision requiring an owner.
-    DecisionHole,
-    /// Extraction of a reusable AST pattern.
-    PatternExtraction,
+    /// Time-boxed investigation with an open-ended outcome.
+    Spike,
 }
 
 /// Lifecycle state of a task.
@@ -45,6 +43,8 @@ pub enum TaskStatus {
     Verified,
     /// Intentionally parked for a future milestone.
     Deferred,
+    /// Completed and archived out of active backlog views.
+    Archived,
     /// Retry budget exhausted or verification failed.
     Failed,
 }

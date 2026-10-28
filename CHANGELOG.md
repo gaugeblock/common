@@ -5,6 +5,14 @@ All notable changes to `gaugeblock/common` are documented here. The format follo
 
 ## [Unreleased]
 
+### Fixed
+- `gaugeblock-contracts`: `VerificationReceipt` now matches the real ledger shape (`verifier`,
+  `command`, `exit_code: Option<i32>`, `diagnostic_count`) instead of the stale
+  `command_executed`/`passed_tests_count` pair; `TaskKind` gains `Spike` and drops the unimplemented
+  `DecisionHole`/`PatternExtraction`; `TaskStatus` gains `Archived`; `LedgerEvent` gains
+  `PlanUpdated`; `DadoPattern` gains `canonical_example_fills`. All reconciled against the
+  implementations and written back into `CONTRACTS.md` ([GB-143]).
+
 ### Added
 - `gaugeblock-contracts`: `outfeed` wire domain — `ReleasePlan`, `ReleaseStatus`, `CommitInfo`,
   `ConventionalKind`, `BumpType`, `ManifestDiff`, `SuiteLock`, `SuiteMetadata`, `SuiteToolEntry`.

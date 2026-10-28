@@ -66,9 +66,10 @@ fn sample_task() -> TaskNode {
             dirty_files: Vec::new(),
         }),
         verification_receipt: Some(VerificationReceipt {
-            command_executed: "cargo nextest run -p outfeed-core".to_string(),
-            exit_code: 0,
-            passed_tests_count: Some(39),
+            verifier: "cargo-nextest".to_string(),
+            command: "cargo nextest run -p outfeed-core".to_string(),
+            exit_code: Some(0),
+            diagnostic_count: None,
             summary: "tier 2 green".to_string(),
             verified_at_epoch_ms: 4,
             git_branch: Some("feat/outfeed-adaptive-headroom".to_string()),

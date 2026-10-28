@@ -18,7 +18,7 @@ fn test_lexical_scope_roundtrip_and_snake_case_kinds() {
             name: "plan".to_string(),
             ty: "ReleasePlan".to_string(),
             is_mutable: false,
-            kind: SymbolKind::LocalVar,
+            kind: SymbolKind::Parameter,
         }],
         available_imports: vec!["use std::path::Path;".to_string()],
     };
@@ -29,7 +29,7 @@ fn test_lexical_scope_roundtrip_and_snake_case_kinds() {
 
     let value = serde_json::to_value(&scope).expect("value");
     assert_eq!(value["language"], "Rust");
-    assert_eq!(value["bindings"][0]["kind"], "local_var");
+    assert_eq!(value["bindings"][0]["kind"], "parameter");
     for key in [
         "repo_relative_path",
         "language",
@@ -82,6 +82,10 @@ fn test_dado_pattern_reuses_the_contract_language_enum() {
             max_tokens: 256,
             allow_literals: false,
         }],
+        canonical_example_fills: std::collections::BTreeMap::from([(
+            "body".to_string(),
+            "Ok(Json(pool))".to_string(),
+        )]),
     };
 
     let json = serde_json::to_string(&pattern).expect("serialize");
