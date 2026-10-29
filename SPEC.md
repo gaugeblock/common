@@ -32,6 +32,16 @@ changing its type, is breaking and bumps the minor base (`0.1.0-beta.1` -> `0.2.
 `gaugeblock-contracts` must never depend on a member repository. The dependency direction is always
 member -> contracts.
 
+### Invariant 6: One process boundary for `git`
+`gaugeblock-git` is the only crate in the suite that spawns `git`. It resolves no `.gaugeblock/` path,
+chooses no repository and knows no suite vocabulary, so the edge `gaugeblock-workspace` ->
+`gaugeblock-git` stays one-way and the crate graph stays acyclic (`GB-131`, `GB-189`).
+
+### Invariant 7: One answer for `.gaugeblock/`
+`GaugeblockPaths` is the only resolver of the canonical `.gaugeblock/` directory, and it derives that
+directory from the git *common* dir rather than by walking up from the caller's directory — which is
+what stops a linked worktree from growing a second ledger and a second spool (`GB-189`, `GB-169`).
+
 ---
 
 ## 2. Domain coverage
@@ -44,6 +54,13 @@ member -> contracts.
 | `sawhorse` | `ExecutionMode`, `ModelRole`, `ReasoningEffort`, `InferenceRequest`, `InferenceResponse` | shipped (`GB-144`) |
 | `dado` / `batten` | `TypedHole`, `DadoPattern`, `CompiledGrammarConstraint`, `GrammarFormat` | shipped (`GB-144`) |
 | `telemetry` | `AnonymizedSynthesisTrace`, `TelemetryTier`, `SpoolEntry`, `SyncStatus` | shipped (`GB-182`) |
+
+### Planned crates
+
+| Domain | Types | Status |
+|:---|:---|:---|
+| `git` | `RepoInfo`, `WorktreeInfo`, `CommitRange`, `CommitSummary` | planned (`GB-131`) |
+| `workspace` | `GaugeblockPaths`, `WorkspaceTopology`, `MemberRepo`, `SuiteConfig` | planned (`GB-189`) |
 
 ### Telemetry outbox record
 
