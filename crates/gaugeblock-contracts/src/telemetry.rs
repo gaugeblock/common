@@ -27,6 +27,19 @@ pub enum TelemetryTier {
     Diamond,
 }
 
+impl core::fmt::Display for TelemetryTier {
+    /// Renders the tier as the snake_case name used in the wire form and in the store.
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        let name = match self {
+            Self::Bronze => "bronze",
+            Self::Silver => "silver",
+            Self::Gold => "gold",
+            Self::Diamond => "diamond",
+        };
+        formatter.write_str(name)
+    }
+}
+
 /// Wire contract representing an AST-anonymized synthesis run per `CONTRACTS.md`.
 ///
 /// The provenance fields are optional and default when absent, so every record written before
