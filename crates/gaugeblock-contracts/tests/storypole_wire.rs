@@ -22,6 +22,7 @@ fn sample_task() -> TaskNode {
         description: "Guard disk headroom during suite releases".to_string(),
         kind: TaskKind::Feature,
         status: TaskStatus::InProgress,
+        archived_at_epoch_ms: None,
         priority: 1,
         scope: TaskScope {
             repo: Some("outfeed".to_string()),

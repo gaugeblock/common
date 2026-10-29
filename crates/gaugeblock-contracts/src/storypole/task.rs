@@ -174,6 +174,12 @@ pub struct TaskNode {
     pub created_at_epoch_ms: u64,
     /// Last mutation timestamp in epoch milliseconds.
     pub updated_at_epoch_ms: u64,
+    /// When the task was archived, leaving `status` intact.
+    ///
+    /// Archived is a *state*, not a status: a task archived while `Verified` still reports
+    /// `Verified`, so it can be filtered by the status it earned and read back afterwards.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub archived_at_epoch_ms: Option<u64>,
 }
 
 /// Assembled context payload returned by `storypole next` / `claim` and the MCP tools.
