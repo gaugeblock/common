@@ -140,7 +140,7 @@ pub struct LexicalScope {
 }
 
 /// Result of validating a synthesized AST splice or running compiler checks.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VerificationReport {
     /// Whether the splice produced a syntactically valid AST.
     pub ast_valid: bool,
