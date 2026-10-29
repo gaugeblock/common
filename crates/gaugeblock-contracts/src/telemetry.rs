@@ -11,7 +11,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::miter::Language;
+use crate::miter::{Language, VerificationReport};
 
 /// Quality tier assigned to an anonymized synthesis trace per `CONTRACTS.md`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -25,38 +25,6 @@ pub enum TelemetryTier {
     Gold,
     /// Survived unchanged in main across subsequent release commits.
     Diamond,
-}
-
-/// Located compiler diagnostic reported during verification.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct CompilerDiagnostic {
-    /// Relative file path.
-    pub file: String,
-    /// 1-based line number.
-    pub line: usize,
-    /// 1-based column number.
-    pub column: usize,
-    /// Tool-specific error code (e.g. `E0308`).
-    pub code: Option<String>,
-    /// Error message string.
-    pub message: String,
-    /// Optional compiler suggestion.
-    pub suggestion: Option<String>,
-}
-
-/// Comprehensive outcome of verifying a synthesized file.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct VerificationReport {
-    /// Whether the synthesized source parsed into a valid AST.
-    pub ast_valid: bool,
-    /// Whether static typecheck/compilation succeeded.
-    pub typecheck_passed: bool,
-    /// Whether cargo/project unit tests passed, if executed.
-    pub tests_passed: Option<bool>,
-    /// Located diagnostics emitted by the compiler or linter.
-    pub diagnostics: Vec<CompilerDiagnostic>,
-    /// Elapsed verification duration in milliseconds.
-    pub duration_ms: u64,
 }
 
 /// Wire contract representing an AST-anonymized synthesis run per `CONTRACTS.md`.
