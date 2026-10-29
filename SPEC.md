@@ -43,3 +43,22 @@ member -> contracts.
 | `storypole` | `StorypoleConfig`, `WorkspaceConfig`, `DiscoveredMember`, `TaskNode`, `TaskKind`, `TaskStatus`, `TaskScope`, `TaskEdge`, `EdgeKind`, `TaskDecision`, `DecisionStatus`, `TaskPlan`, `PlanStep`, `AgentClaim`, `HandoffPacket`, `VerificationReceipt`, `TaskContextBriefing`, `LedgerEvent` | shipped (`GB-145`) |
 | `sawhorse` | `ExecutionMode`, `ModelRole`, `ReasoningEffort`, `InferenceRequest`, `InferenceResponse` | shipped (`GB-144`) |
 | `dado` / `batten` | `TypedHole`, `DadoPattern`, `CompiledGrammarConstraint`, `GrammarFormat` | shipped (`GB-144`) |
+| `telemetry` | `AnonymizedSynthesisTrace`, `TelemetryTier`, `SpoolEntry`, `SyncStatus` | shipped (`GB-182`) |
+
+### Telemetry outbox record
+
+One line of `<canonical .gaugeblock>/spool/outbox.jsonl` is one `SpoolEntry`. `storypole`, `joiner` and
+`benchwork` all append this shape and `rabbet` integrates against it, so the envelope - not the bare
+trace - is the boundary type.
+
+1. `content_hash` is `SpoolEntry::hash_trace(&trace)`: SHA-256 over `serde_json::to_vec(&trace)`,
+   lowercase hex. There is exactly one implementation of that rule, and every reader recomputes it.
+2. `sync_status` serialises as `pending` | `synced` | `rejected` and defaults to `pending`. Because it
+   is a snake_case string rather than a number or a struct, outboxes written before the type was
+   shared still parse.
+3. A line that parses as neither `SpoolEntry` nor a bare `AnonymizedSynthesisTrace` is preserved
+   verbatim by migration rather than discarded.
+
+`SpoolEntry::from_trace` is the only constructor that decides the hash; assembling the struct literal
+by hand is how a writer and a reader disagree about a record.
+

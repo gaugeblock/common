@@ -69,3 +69,78 @@ pub struct AnonymizedSynthesisTrace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub head_commit_sha: Option<String>,
 }
+
+/// Synchronisation state of a spooled trace.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SyncStatus {
+    /// Awaiting transmission to a hub.
+    #[default]
+    Pending,
+    /// Successfully synchronised.
+    Synced,
+    /// Rejected by schema validation or deduplication.
+    Rejected,
+}
+
+impl core::fmt::Display for SyncStatus {
+    fn fmt(&self, formatter: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        formatter.write_str(match self {
+            Self::Pending => "pending",
+            Self::Synced => "synced",
+            Self::Rejected => "rejected",
+        })
+    }
+}
+
+/// One line of the spool outbox: the trace plus its identity and sync state.
+///
+/// Every writer (`storypole verify`, `joiner fill`, `benchwork`) appends this shape and every reader
+/// (`rabbet` ingestion) parses it, so the outbox is one format rather than three (`GB-182`).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SpoolEntry {
+    /// The anonymised trace payload.
+    pub trace: AnonymizedSynthesisTrace,
+    /// SHA-256 of the canonical trace JSON, used for deduplication.
+    pub content_hash: String,
+    /// Current synchronisation state.
+    pub sync_status: SyncStatus,
+    /// When the entry was spooled, in epoch milliseconds.
+    pub recorded_at_ms: u64,
+}
+
+impl SpoolEntry {
+    /// Builds an entry, computing `content_hash` the one canonical way.
+    ///
+    /// The hash is SHA-256 over `serde_json` bytes of the trace, which is what `joiner` wrote before
+    /// this type was shared - so hashes already recorded stay comparable.
+    ///
+    /// # Errors
+    ///
+    /// Returns the serialiser error if the trace cannot be encoded.
+    pub fn from_trace(
+        trace: AnonymizedSynthesisTrace,
+        recorded_at_ms: u64,
+    ) -> Result<Self, serde_json::Error> {
+        let content_hash = Self::hash_trace(&trace)?;
+        Ok(Self {
+            trace,
+            content_hash,
+            sync_status: SyncStatus::Pending,
+            recorded_at_ms,
+        })
+    }
+
+    /// Computes the canonical content hash of a trace.
+    ///
+    /// # Errors
+    ///
+    /// Returns the serialiser error if the trace cannot be encoded.
+    pub fn hash_trace(trace: &AnonymizedSynthesisTrace) -> Result<String, serde_json::Error> {
+        use sha2::{Digest, Sha256};
+        let bytes = serde_json::to_vec(trace)?;
+        let mut hasher = Sha256::new();
+        hasher.update(&bytes);
+        Ok(format!("{:x}", hasher.finalize()))
+    }
+}
