@@ -1,0 +1,15 @@
+[package]
+name = "gaugeblock-git"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+description = "Git plumbing boundary for the gaugeblock neurosymbolic suite"
+
+[lints]
+workspace = true
+
+[dependencies]
+thiserror = "2.0"
