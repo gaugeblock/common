@@ -48,6 +48,15 @@ pub enum ModelRole {
 }
 
 /// Reasoning or thinking effort requested from the model.
+///
+/// The set is closed at six tiers, taken from the catalog's own ordinal scale (`GB-221`): upstream
+/// providers advertise per-model `reasoning_options`, but every advertised token folds onto one of
+/// these ranks (`minimal` -> `Low`, `med` -> `Medium`, `xhigh` -> `XHigh`, `maximum` -> `Max`), and
+/// unknown tokens are dropped rather than passed through. So this enum does not need an open variant;
+/// a provider inventing a seventh tier would be a catalog change first.
+///
+/// Clamping is the caller's job: when a model does not advertise the requested tier, clamp to the
+/// nearest supported one, preferring the lower on a tie.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ReasoningEffort {
@@ -59,6 +68,14 @@ pub enum ReasoningEffort {
     Medium,
     /// Exhaustive reasoning effort.
     High,
+    /// Effort beyond `High`, advertised by a minority of models.
+    ///
+    /// Renamed explicitly because the canonical wire string is `xhigh`, not the `x_high` that
+    /// `snake_case` would produce, and this enum is serialised into wire envelopes.
+    #[serde(rename = "xhigh")]
+    XHigh,
+    /// The model's maximum effort.
+    Max,
 }
 
 /// A single inference request handed to a provider.
