@@ -153,34 +153,6 @@ fn test_tool_arguments_default_to_an_empty_object() {
     assert_eq!(value["result"]["content"][0]["text"], json!("{}"));
 }
 
-struct LegacyHandler;
-
-impl McpHandler for LegacyHandler {
-    fn server_name(&self) -> &str {
-        "legacy-mcp"
-    }
-
-    fn list_tools(&self) -> Value {
-        json!([])
-    }
-
-    fn call_tool(&self, _name: &str, _arguments: &Value) -> ToolOutcome {
-        // A dispatcher that still builds the envelope itself is passed through unchanged.
-        ToolOutcome::Raw(json!({ "content": [{ "type": "text", "text": "legacy" }] }))
-    }
-}
-
-#[test]
-fn test_a_legacy_dispatcher_result_is_passed_through_unchanged() {
-    let value = handle_line(
-        r#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"any"}}"#,
-        &LegacyHandler,
-    )
-    .unwrap()
-    .into_value();
-    assert_eq!(value["result"]["content"][0]["text"], json!("legacy"));
-}
-
 /// A server whose dispatch is asynchronous, as three of the seven are.
 struct AsyncFixture;
 

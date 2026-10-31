@@ -134,9 +134,10 @@ ladder - so it belongs in its own tickets rather than being swept in with the ty
 
 Rules:
 
-1. **The transport owns the wire, the tool layer owns the data.** A tool returns `ToolOutcome::Json` or
-   `ToolOutcome::Failed`; building the MCP `content` envelope is not a tool's job. `ToolOutcome::Raw`
-   exists for the three dispatchers that still do it, and is documented as transitional.
+1. **The transport owns the wire, the tool layer owns the data.** A tool returns `ToolOutcome::Json`,
+   `Text` or `Failed`; building the MCP `content` envelope is not a tool's job. All seven servers now
+   comply - `batten`, `joiner` and `benchwork` returned finished envelopes until `GB-234` converted
+   their dispatchers, and the transitional `Raw` variant that carried them is deleted.
 2. **A malformed line is answered, not dropped.** `-32700` with `id: null`, then the loop continues.
    One bad message must not end a session, and silence is indistinguishable from a hang.
 3. **A failed tool is a successful call.** MCP reserves `error` for protocol faults, so a tool failure
