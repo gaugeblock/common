@@ -15,6 +15,8 @@
 
 mod error;
 mod repo;
+mod worktree;
 
 pub use error::GitError;
 pub use repo::{Repository, run_git};
+pub use worktree::WorktreeInfo;
