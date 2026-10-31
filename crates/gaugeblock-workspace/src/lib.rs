@@ -11,8 +11,10 @@
 //! ledger.
 
 mod paths;
+mod topology;
 
 pub use paths::GaugeblockPaths;
+pub use topology::{MemberRepo, WorkspaceTopology};
 
 /// Failures from workspace resolution.
 #[derive(Debug, thiserror::Error)]

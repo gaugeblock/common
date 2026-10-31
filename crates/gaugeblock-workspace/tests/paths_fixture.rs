@@ -142,3 +142,38 @@ fn test_explicit_construction_does_not_consult_git() {
         Path::new("/tmp/suite/.gaugeblock/miter/config.toml")
     );
 }
+
+#[test]
+fn test_topology_discovers_git_repositories_and_reports_missing_expected_members() {
+    use gaugeblock_workspace::WorkspaceTopology;
+
+    let base = std::env::temp_dir().join(format!("gb-ws-topo-{}", std::process::id()));
+    std::fs::remove_dir_all(&base).ok();
+    for name in ["miter", "storypole", "not-a-repo"] {
+        let dir = base.join(name);
+        std::fs::create_dir_all(&dir).unwrap();
+        if name != "not-a-repo" {
+            std::fs::create_dir_all(dir.join(".git")).unwrap();
+        }
+    }
+
+    let topology = WorkspaceTopology::discover(&base);
+    let names: Vec<&str> = topology.members().iter().map(|m| m.name.as_str()).collect();
+
+    assert_eq!(
+        names,
+        vec!["miter", "storypole"],
+        "sorted, and only repositories"
+    );
+    assert_eq!(
+        topology.member("miter").unwrap().gaugeblock_dir(),
+        base.join("miter/.gaugeblock/miter")
+    );
+    // The expected list is what makes an empty tree distinguishable from a healthy one.
+    let missing = topology.missing_members();
+    assert!(missing.contains(&"benchwork"), "got {missing:?}");
+    assert!(!missing.contains(&"miter"));
+    assert_eq!(missing.len(), 9, "2 present of 11 expected");
+
+    std::fs::remove_dir_all(&base).ok();
+}
