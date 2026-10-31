@@ -87,6 +87,17 @@ impl Repository {
         Ok(())
     }
 
+    /// Creates `branch` at HEAD and checks it out.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError::Failed`] when the branch already exists, carrying stderr - which is how a caller
+    /// distinguishes "taken" from "invalid name".
+    pub fn checkout_new_branch(&self, branch: &str) -> Result<(), GitError> {
+        run_git(self.root(), &["checkout", "-b", branch])?;
+        Ok(())
+    }
+
     /// Fast-forwards the current branch from `remote`/`branch`, refusing anything that would merge.
     ///
     /// `--ff-only` is deliberate: a release tool that quietly creates a merge commit has changed
