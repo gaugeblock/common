@@ -82,6 +82,14 @@ pub enum ToolOutcome {
     /// The tool ran and failed. This is a *successful* JSON-RPC call: MCP reserves the `error` field
     /// for protocol faults, so a tool failure travels in `content` with `isError` set.
     Failed(String),
+    /// A result the tool layer already built, emitted verbatim.
+    ///
+    /// Transitional, and deliberately not hidden: `batten`, `joiner` and `benchwork` construct the MCP
+    /// envelope inside `dispatch_tool`, so their tools still speak the wire format. Moving that up into
+    /// the transport is a change to each dispatcher's every return site, which is its own task - see the
+    /// deferred item filed against `GB-130`. New code should return [`ToolOutcome::Json`] or
+    /// [`ToolOutcome::Failed`] and let the transport own the shape.
+    Raw(Value),
 }
 
 impl ToolOutcome {
@@ -92,6 +100,7 @@ impl ToolOutcome {
             Self::Json(value) => Self::text(value.to_string(), false),
             Self::Text(text) => Self::text(text, false),
             Self::Failed(message) => Self::text(format!("Error: {message}"), true),
+            Self::Raw(value) => value,
         }
     }
 

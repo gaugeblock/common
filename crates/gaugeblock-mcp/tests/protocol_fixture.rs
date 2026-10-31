@@ -153,3 +153,32 @@ fn test_tool_arguments_default_to_an_empty_object() {
     let value = reply(r#"{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"echo"}}"#);
     assert_eq!(value["result"]["content"][0]["text"], json!("{}"));
 }
+
+struct LegacyHandler;
+
+impl McpHandler for LegacyHandler {
+    fn server_name(&self) -> &str {
+        "legacy-mcp"
+    }
+
+    fn list_tools(&self) -> Value {
+        json!([])
+    }
+
+    fn call_tool(&self, _name: &str, _arguments: &Value) -> ToolOutcome {
+        // A dispatcher that still builds the envelope itself is passed through unchanged.
+        ToolOutcome::Raw(json!({ "content": [{ "type": "text", "text": "legacy" }] }))
+    }
+}
+
+#[test]
+fn test_a_legacy_dispatcher_result_is_passed_through_unchanged() {
+    let value = handle_line(
+        r#"{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"any"}}"#,
+        &LegacyHandler,
+    )
+    .unwrap()
+    .unwrap()
+    .into_value();
+    assert_eq!(value["result"]["content"][0]["text"], json!("legacy"));
+}
