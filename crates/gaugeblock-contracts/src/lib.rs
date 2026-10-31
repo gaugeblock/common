@@ -15,6 +15,7 @@ pub mod dado_batten;
 pub mod miter;
 pub mod outfeed;
 pub mod sawhorse;
+pub mod shared_contract;
 pub mod storypole;
 pub mod telemetry;
 
@@ -22,5 +23,6 @@ pub use dado_batten::*;
 pub use miter::*;
 pub use outfeed::*;
 pub use sawhorse::*;
+pub use shared_contract::*;
 pub use storypole::*;
 pub use telemetry::*;
