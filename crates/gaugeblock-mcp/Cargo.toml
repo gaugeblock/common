@@ -1,0 +1,21 @@
+[package]
+name = "gaugeblock-mcp"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+description = "Shared JSON-RPC 2.0 Model Context Protocol server plumbing for the gaugeblock suite"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+tracing = "0.1"
+
+[dev-dependencies]
+serde_json = "1.0"
