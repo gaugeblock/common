@@ -194,3 +194,38 @@ fn test_a_branch_already_checked_out_cannot_be_added_twice() {
         "the refusal should name the worktree holding the branch, got: {message}"
     );
 }
+
+#[test]
+fn test_history_ranges_and_merge_bases_over_real_commits() {
+    let fixture = Fixture::new("history");
+    let repo = Repository::discover(&fixture.dir).unwrap();
+    for (file, message) in [("b.txt", "second"), ("c.txt", "third")] {
+        std::fs::write(fixture.dir.join(file), "x\n").unwrap();
+        git(&fixture.dir, &["add", file]);
+        git(&fixture.dir, &["commit", "-m", message]);
+    }
+
+    // A branch fork, so merge_base has something real to find.
+    git(&fixture.dir, &["checkout", "-b", "side"]);
+    std::fs::write(fixture.dir.join("d.txt"), "x\n").unwrap();
+    git(&fixture.dir, &["add", "d.txt"]);
+    git(&fixture.dir, &["commit", "-m", "side work"]);
+    git(&fixture.dir, &["checkout", "trunk"]);
+
+    let recent = repo.commits_between("trunk~2..trunk").unwrap();
+    assert_eq!(recent.len(), 2, "got {recent:?}");
+    assert_eq!(recent[0].summary, "third", "rev-list order is newest first");
+    assert_eq!(recent[1].summary, "second");
+
+    let base = repo.merge_base("trunk", "side").unwrap();
+    // `trunk~0..trunk` is the empty range - `~0` is the tip itself - so this asks for the tip with `~1`.
+    let trunk_head = repo.commits_between("trunk~1..trunk").unwrap();
+    // `side` branched after the third commit, so the fork point *is* trunk's tip. Asserting otherwise
+    // was my error, not git's - which is the useful kind of test to have written.
+    assert_eq!(base, trunk_head[0].sha, "the fork point is trunk's tip");
+    assert!(repo.is_ancestor(&base, "side").unwrap());
+    assert!(
+        !repo.is_ancestor("side", "trunk").unwrap(),
+        "side is not an ancestor of trunk"
+    );
+}

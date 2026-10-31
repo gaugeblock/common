@@ -14,9 +14,11 @@
 //! `GB-131`.
 
 mod error;
+mod history;
 mod repo;
 mod worktree;
 
 pub use error::GitError;
+pub use history::Commit;
 pub use repo::{Repository, run_git};
 pub use worktree::WorktreeInfo;
