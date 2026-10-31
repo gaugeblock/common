@@ -30,6 +30,32 @@ pub fn dispatch<H: McpHandler>(handler: &H, request: &RpcRequest) -> Option<RpcR
     None
 }
 
+/// [`dispatch`] for a server whose tool dispatch is asynchronous.
+///
+/// Exists so an async server can keep a message-shaped entry point for its own tests without rebuilding
+/// the routing beside it.
+pub async fn dispatch_async<H: AsyncMcpHandler>(
+    handler: &H,
+    request: &RpcRequest,
+) -> Option<RpcResponse> {
+    let routed = route(request);
+    if let Some(response) = reply_without_tool(
+        &routed,
+        request.id.clone(),
+        || handler.server_name().to_string(),
+        || handler.list_tools(),
+    ) {
+        return Some(response);
+    }
+    match &routed {
+        Route::CallTool { name, arguments } => Some(RpcResponse::result(
+            request.id.clone(),
+            handler.call_tool(name, arguments).await.into_result(),
+        )),
+        _ => None,
+    }
+}
+
 /// Answers one line, or `None` when the message takes no reply.
 ///
 /// A line that is not valid JSON is answered with [`code::PARSE_ERROR`] rather than an `Err`: one
@@ -88,25 +114,7 @@ where
         }
         let response = match parse(trimmed) {
             Err(response) => Some(response),
-            Ok(request) => {
-                let routed = route(&request);
-                let built = reply_without_tool(
-                    &routed,
-                    request.id.clone(),
-                    || handler.server_name().to_string(),
-                    || handler.list_tools(),
-                );
-                match built {
-                    Some(response) => Some(response),
-                    None => match &routed {
-                        Route::CallTool { name, arguments } => Some(RpcResponse::result(
-                            request.id.clone(),
-                            handler.call_tool(name, arguments).await.into_result(),
-                        )),
-                        _ => None,
-                    },
-                }
-            }
+            Ok(request) => dispatch_async(handler, &request).await,
         };
         if let Some(response) = response {
             write_response(writer, &response)?;
