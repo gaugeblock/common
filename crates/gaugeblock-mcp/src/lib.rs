@@ -16,9 +16,9 @@ mod handler;
 mod protocol;
 mod stdio;
 
-pub use handler::{McpHandler, dispatch};
+pub use handler::{AsyncMcpHandler, McpHandler, Route, route};
 pub use protocol::{PROTOCOL_VERSION, RpcRequest, RpcResponse, ToolOutcome, code};
-pub use stdio::{handle_line, serve};
+pub use stdio::{dispatch, handle_line, serve, serve_async};
 
 /// Failures from serving.
 ///

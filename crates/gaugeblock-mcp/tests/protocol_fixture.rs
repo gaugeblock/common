@@ -36,7 +36,6 @@ fn fixture() -> Fixture {
 
 fn reply(line: &str) -> Value {
     handle_line(line, &fixture())
-        .expect("no io failure")
         .expect("a reply was expected")
         .into_value()
 }
@@ -100,7 +99,7 @@ fn test_notifications_are_never_answered() {
         r#"{"jsonrpc":"2.0","method":"no/such/method"}"#,
     ] {
         assert!(
-            handle_line(line, &fixture()).unwrap().is_none(),
+            handle_line(line, &fixture()).is_none(),
             "answered a notification: {line}"
         );
     }
@@ -178,7 +177,72 @@ fn test_a_legacy_dispatcher_result_is_passed_through_unchanged() {
         &LegacyHandler,
     )
     .unwrap()
-    .unwrap()
     .into_value();
     assert_eq!(value["result"]["content"][0]["text"], json!("legacy"));
+}
+
+/// A server whose dispatch is asynchronous, as three of the seven are.
+struct AsyncFixture;
+
+impl gaugeblock_mcp::AsyncMcpHandler for AsyncFixture {
+    fn server_name(&self) -> &str {
+        "async-mcp"
+    }
+
+    fn list_tools(&self) -> Value {
+        json!([])
+    }
+
+    async fn call_tool(&self, name: &str, arguments: &Value) -> ToolOutcome {
+        // A real await point, so this is genuinely driven rather than trivially ready.
+        std::future::ready(()).await;
+        ToolOutcome::Json(json!({ "tool": name, "arguments": arguments }))
+    }
+}
+
+/// A one-poll executor, sufficient for futures that never pend on I/O.
+fn block_on<F: std::future::Future>(future: F) -> F::Output {
+    let mut future = std::pin::pin!(future);
+    let mut context = std::task::Context::from_waker(std::task::Waker::noop());
+    loop {
+        if let std::task::Poll::Ready(output) = future.as_mut().poll(&mut context) {
+            return output;
+        }
+        std::thread::yield_now();
+    }
+}
+
+#[test]
+fn test_the_async_loop_agrees_with_the_synchronous_one() {
+    let input = concat!(
+        "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}\n",
+        "not-json\n",
+        "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"t\",\"arguments\":{\"a\":1}}}\n",
+        "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\n",
+    );
+    let mut output = Vec::new();
+    block_on(gaugeblock_mcp::serve_async(
+        input.as_bytes(),
+        &mut output,
+        &AsyncFixture,
+    ))
+    .expect("serve_async");
+
+    let text = String::from_utf8(output).unwrap();
+    let lines: Vec<&str> = text.lines().collect();
+    assert_eq!(
+        lines.len(),
+        3,
+        "initialize, parse error, tool call - not the notification"
+    );
+
+    let init: Value = serde_json::from_str(lines[0]).unwrap();
+    assert_eq!(init["result"]["serverInfo"]["name"], json!("async-mcp"));
+
+    let parse: Value = serde_json::from_str(lines[1]).unwrap();
+    assert_eq!(parse["error"]["code"], json!(code::PARSE_ERROR));
+
+    let call: Value = serde_json::from_str(lines[2]).unwrap();
+    let text = call["result"]["content"][0]["text"].as_str().unwrap();
+    assert!(text.contains(r#""tool":"t""#), "got {text}");
 }
