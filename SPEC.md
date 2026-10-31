@@ -55,7 +55,7 @@ what stops a linked worktree from growing a second ledger and a second spool (`G
 | `dado` / `batten` | `TypedHole`, `DadoPattern`, `CompiledGrammarConstraint`, `GrammarFormat` | shipped (`GB-144`) |
 | `telemetry` | `AnonymizedSynthesisTrace`, `TelemetryTier`, `SpoolEntry`, `SyncStatus` | shipped (`GB-182`) |
 | `git` | `Repository`, `WorktreeInfo`, `Commit`, `CommitSummary`, `AheadBehind`, `GitError` | shipped (`GB-131`) |
-| `workspace` | `GaugeblockPaths`, `WorkspaceTopology`, `MemberRepo`, `WorkspaceError` | shipped (`GB-189`, in progress) |
+| `workspace` | `GaugeblockPaths`, `WorkspaceTopology`, `MemberRepo`, `SuiteConfig`, `WorkspaceError` | shipped (`GB-189`) |
 
 ### Planned crates
 
@@ -75,6 +75,19 @@ ambiguity this type removes, so a path outside a repository is an error that nam
 carries the git failure that established it.
 3. **Two constructors, two meanings.** `discover` infers from a directory; `at` accepts a root the
 caller already knows. A tool handed a workspace root uses `at` and does not pretend to infer it.
+
+`SuiteConfig` loads `.gaugeblock/config.toml` and its `.env` neighbour and nothing more: the file is a
+generic table because a typed struct per tool would put every tool's config type in the foundation
+crate, inverting the dependency graph. Its three rules are the ones the per-tool loaders disagreed on:
+
+1. **Absent is empty, malformed is an error.** A checkout that was never configured still runs every
+tool; a file that exists but does not parse must never be silently discarded, because that throws away
+the user's configuration exactly when they need to be told.
+2. **The environment outranks the file.** A shell export or CI secret is a deliberate override; `.env`
+is the default a developer edits.
+3. **Blank is absent in either source.** An empty `ANTHROPIC_API_KEY=` in a profile or a placeholder
+left in a `.env` is a mistake. Returning `""` would hand a provider an empty token instead of
+reporting that no credential is configured.
 
 `WorkspaceTopology` keeps discovery and expectation apart: `discover` reports what is on disk and
 `expected_members` reports the eleven the suite should contain, so a missing checkout is reportable

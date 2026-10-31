@@ -11,9 +11,11 @@
 //! ledger.
 
 mod paths;
+mod suite_config;
 mod topology;
 
 pub use paths::GaugeblockPaths;
+pub use suite_config::SuiteConfig;
 pub use topology::{MemberRepo, WorkspaceTopology};
 
 /// Failures from workspace resolution.
@@ -29,5 +31,14 @@ pub enum WorkspaceError {
         /// The git failure that established this.
         #[source]
         source: gaugeblock_git::GitError,
+    },
+
+    /// The unified configuration exists but is not valid TOML.
+    #[error("`{path}` is not a valid TOML configuration: {message}")]
+    InvalidConfig {
+        /// The file that failed to parse.
+        path: String,
+        /// Why it failed, as reported by the parser.
+        message: String,
     },
 }
