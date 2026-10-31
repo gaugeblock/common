@@ -116,3 +116,29 @@ fn test_malformed_config_is_an_error_that_names_the_file() {
 
     std::fs::remove_dir_all(&root).ok();
 }
+
+#[test]
+fn test_env_credentials_reads_the_dotenv_without_the_config() {
+    let root = suite_root("creds-only");
+    std::fs::write(
+        root.join(".gaugeblock/.env"),
+        "KEY_ONE=one
+KEY_BLANK=
+",
+    )
+    .unwrap();
+    // A broken config.toml must not hide a credential: a provider key has no use for the table.
+    std::fs::write(
+        root.join(".gaugeblock/config.toml"),
+        "[broken
+",
+    )
+    .unwrap();
+
+    let vars = gaugeblock_workspace::env_credentials(&root);
+    assert_eq!(vars.get("KEY_ONE").map(String::as_str), Some("one"));
+    // Returned as written; the blank rule belongs to the credential lookup.
+    assert_eq!(vars.get("KEY_BLANK").map(String::as_str), Some(""));
+
+    std::fs::remove_dir_all(&root).ok();
+}

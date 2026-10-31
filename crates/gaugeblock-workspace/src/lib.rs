@@ -15,7 +15,7 @@ mod suite_config;
 mod topology;
 
 pub use paths::GaugeblockPaths;
-pub use suite_config::SuiteConfig;
+pub use suite_config::{SuiteConfig, env_credentials};
 pub use topology::{MemberRepo, WorkspaceTopology};
 
 /// Failures from workspace resolution.

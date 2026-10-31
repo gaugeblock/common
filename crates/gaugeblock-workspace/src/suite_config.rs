@@ -120,6 +120,17 @@ impl SuiteConfig {
     }
 }
 
+/// The variables in `.gaugeblock/.env` for a known suite root, without reading `config.toml`.
+///
+/// A credential lookup must not fail because the unified config has a syntax error, and it has no use
+/// for the parsed table - so this skips it rather than loading a [`SuiteConfig`] and discarding most of
+/// it. Keys are returned as written; the blank-is-absent rule is applied by
+/// [`SuiteConfig::credential_with`], and callers doing their own lookup must apply it too.
+#[must_use]
+pub fn env_credentials(suite_root: &Path) -> BTreeMap<String, String> {
+    read_env_file(&GaugeblockPaths::at(suite_root).env_file())
+}
+
 /// Reads `KEY=VALUE` lines, ignoring blanks and `#` comments.
 ///
 /// Deliberately not a full dotenv parser: no interpolation, no `export` prefix, no multiline values.
