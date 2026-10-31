@@ -136,3 +136,26 @@ fn test_a_linked_worktree_shares_one_common_dir() {
 
     std::fs::remove_dir_all(&linked).ok();
 }
+
+#[test]
+fn test_an_unborn_head_reports_its_branch() {
+    // A repository that has never been committed to has a branch but no HEAD commit. `rev-parse`
+    // refuses; `symbolic-ref` answers. Getting this wrong made a release check report a git failure
+    // where the real answer was "you are on the wrong branch".
+    let dir = std::env::temp_dir().join(format!("gb-git-unborn-{}", std::process::id()));
+    std::fs::remove_dir_all(&dir).ok();
+    std::fs::create_dir_all(&dir).unwrap();
+    git(&dir, &["init", "-b", "feat/unreleased"]);
+
+    let repo = Repository::discover(&dir).unwrap();
+    assert_eq!(
+        repo.current_branch().unwrap().as_deref(),
+        Some("feat/unreleased")
+    );
+    assert!(
+        repo.head_sha().is_err(),
+        "there is no commit to resolve, and saying so is correct"
+    );
+
+    std::fs::remove_dir_all(&dir).ok();
+}

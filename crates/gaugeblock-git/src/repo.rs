@@ -99,8 +99,20 @@ impl Repository {
     ///
     /// [`GitError`] when `rev-parse` fails.
     pub fn current_branch(&self) -> Result<Option<String>, GitError> {
-        let name = run_git(&self.root, &["rev-parse", "--abbrev-ref", "HEAD"])?;
-        Ok(if name == "HEAD" { None } else { Some(name) })
+        match run_git(&self.root, &["rev-parse", "--abbrev-ref", "HEAD"]) {
+            Ok(name) if name != "HEAD" => Ok(Some(name)),
+            // A detached head reports the literal `HEAD`, and an unborn one - a repository that has
+            // never been committed to - makes `rev-parse` fail outright. Both are answered by asking
+            // what HEAD points at, which is how a freshly `git init -b main` repository reports main.
+            // Without this a release check reported a git failure where the real answer was "you are
+            // on the wrong branch".
+            Ok(_) | Err(_) => match run_git(&self.root, &["symbolic-ref", "--short", "HEAD"]) {
+                Ok(name) if !name.is_empty() => Ok(Some(name)),
+                Ok(_) => Ok(None),
+                Err(GitError::Failed { .. }) => Ok(None),
+                Err(other) => Err(other),
+            },
+        }
     }
 
     /// True when the working tree or index differs from `HEAD`, untracked files included.
