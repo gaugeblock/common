@@ -75,6 +75,22 @@ impl Repository {
         Ok(())
     }
 
+    /// Adds a detached working tree at `path` on `rev`.
+    ///
+    /// Detached because a sandbox is not a branch: an agent that verified code at a commit must not
+    /// create a named branch for the attempt, or a failed run leaves branches behind.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError::Failed`] when the path is occupied or `rev` is unknown.
+    pub fn add_worktree_detached(&self, path: &Path, rev: &str) -> Result<(), GitError> {
+        run_git(
+            self.root(),
+            &["worktree", "add", "--detach", &path.to_string_lossy(), rev],
+        )?;
+        Ok(())
+    }
+
     /// Removes the working tree at `path`.
     ///
     /// `force` is required when the tree is dirty; refusing by default is deliberate, because an agent

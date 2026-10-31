@@ -37,6 +37,25 @@ impl Repository {
         Ok(paths.len())
     }
 
+    /// The porcelain status lines, exactly as git prints them, trimmed and non-empty only.
+    ///
+    /// `is_dirty` answers whether, this answers what. Callers that classify changes - a build
+    /// verifier deciding which files to re-index - need the lines, and parsing them themselves would
+    /// be the duplication this crate exists to remove.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError`] when `git status` fails.
+    pub fn status_porcelain(&self) -> Result<Vec<String>, GitError> {
+        let output = run_git(self.root(), &["status", "--porcelain"])?;
+        Ok(output
+            .lines()
+            .map(str::trim_end)
+            .filter(|line| !line.is_empty())
+            .map(str::to_string)
+            .collect())
+    }
+
     /// True when something is staged and waiting for a commit.
     ///
     /// `git diff --cached --quiet` exits 1 to mean "differences exist", which is a fact rather than a
