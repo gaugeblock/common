@@ -102,6 +102,15 @@ impl GaugeblockPaths {
         self.member("storypole").join("plans")
     }
 
+    /// The dotenv file holding secrets, resolved by `benchwork` and friends before the environment.
+    ///
+    /// It lives beside the config rather than inside a member directory because credentials are
+    /// suite-wide: one `.env` answers for every tool that needs a provider key.
+    #[must_use]
+    pub fn env_file(&self) -> PathBuf {
+        self.root.join(".env")
+    }
+
     /// The suite configuration file.
     #[must_use]
     pub fn config(&self) -> PathBuf {
