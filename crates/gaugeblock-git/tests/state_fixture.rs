@@ -188,3 +188,27 @@ fn test_pull_ff_only_advances_a_clone_and_refuses_divergence() {
         "a release tool must not invent a merge commit: {error}"
     );
 }
+
+#[test]
+fn test_push_branch_and_remotes_round_trip() {
+    let fixture = Fixture::new("push-branch");
+    let repo = fixture.repo();
+    let bare = fixture.bare_remote();
+    assert_eq!(repo.remotes().unwrap(), vec!["origin".to_string()]);
+
+    fixture.commit_file("e.txt", "five");
+    repo.push_branch("origin", "trunk").unwrap();
+
+    let remote_head = Command::new("git")
+        .args(["--git-dir", bare.to_str().unwrap(), "rev-parse", "trunk"])
+        .output()
+        .unwrap();
+    let remote_head = String::from_utf8_lossy(&remote_head.stdout)
+        .trim()
+        .to_string();
+    assert_eq!(
+        remote_head,
+        repo.head_sha().unwrap(),
+        "the branch reached the remote"
+    );
+}

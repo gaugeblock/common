@@ -54,6 +54,34 @@ impl Repository {
         Ok(())
     }
 
+    /// Pushes `branch` to `remote` without a tag.
+    ///
+    /// Separate from [`Repository::push_branch_and_tag`] because a repository between releases has a
+    /// branch and no new tag; that push must still be possible without inventing one.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError::Failed`] when the push is rejected, carrying stderr.
+    pub fn push_branch(&self, remote: &str, branch: &str) -> Result<(), GitError> {
+        run_git(self.root(), &["push", remote, branch])?;
+        Ok(())
+    }
+
+    /// Configured remote names.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError`] when `git remote` fails.
+    pub fn remotes(&self) -> Result<Vec<String>, GitError> {
+        let output = run_git(self.root(), &["remote"])?;
+        Ok(output
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .map(str::to_string)
+            .collect())
+    }
+
     /// Fetches `refs/tags/<tag>` from `remote` into the local tag namespace, for verification.
     ///
     /// # Errors
