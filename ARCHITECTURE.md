@@ -95,6 +95,25 @@ Rules:
 3. **Discovery returns data, not actions.** `WorkspaceTopology` reports members and their manifests;
    building, testing and releasing them stays in the member that owns the policy.
 
+Adoption so far (`GB-189` step 3, one repository per commit): `benchwork` (hub status, credentials,
+config consolidator, migration preview - 6 sites), `storypole` (unified config in two loaders, root
+ledger - 3), `sawhorse` (dotenv), `chalkline` (docs.toml read and write), `miter` (unified and tool
+config), `joiner` (spool).
+
+**Sites that stay behind on purpose.** A grep for `.gaugeblock` still finds hits, and they are not
+all debt. Two shapes must not be converted:
+
+- *Descriptive* paths inside a plan - `benchwork`'s `MigrationItem` records where a file *will go*, is
+  reported to a user, and is replayed against a root later. Resolving those would hand the plan
+  absolute paths and change its data rather than its meaning.
+- *Policy* fallbacks - `storypole::store` prefers `.gaugeblock/storypole` and falls back to the legacy
+  `.storypole`, walking up to the nearest ancestor holding either; `miter::storage::workspace`,
+  `joiner::model`, `dado::init` and `outfeed::storypole` do the same at smaller scale. Replacing a walk
+  with a git-common-dir lookup changes which checkouts are found, so each is its own commit with its
+  own tests rather than a rename that reads as mechanical.
+
+Consequently the ticket's "63 derivations" figure counts path literals, not migrations.
+
 ### Model metadata is owned outside the suite (`GB-217`)
 
 One boundary is not in `common/` at all, and it is worth stating next to the others because it has the
