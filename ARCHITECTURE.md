@@ -95,6 +95,30 @@ Rules:
 3. **Discovery returns data, not actions.** `WorkspaceTopology` reports members and their manifests;
    building, testing and releasing them stays in the member that owns the policy.
 
+### Model metadata is owned outside the suite (`GB-217`)
+
+One boundary is not in `common/` at all, and it is worth stating next to the others because it has the
+same shape. **Model metadata belongs to the published `models-catalog` crate**, not to a sibling
+repository and not to a hand-maintained list:
+
+| Question | Owner |
+|:--|:--|
+| What models exist, their context and output limits, modalities, prices | `models-catalog` (external crate, published) |
+| Which ids the subscription covers, and their billing tier | `models-catalog` curated overlay |
+| How a protocol encodes a reasoning request | `models-catalog` (`to_wire_reasoning_params`) |
+| Which effort to ask for, and how much budget to spend | **sawhorse** (policy) |
+| The closed set of effort tiers on the wire | `gaugeblock-contracts::ReasoningEffort` |
+
+The rule that keeps this clean: **the crate answers, the suite decides.** `sawhorse` consumes catalog
+answers with the dependency behind an off-by-default feature, so a hermetic build compiles without it
+and falls back to the operator's declared config. Declaring limits by hand is the fallback, never the
+source of truth - the hand-written 1M window and 32k cap that started this work were both wrong about
+the model.
+
+One deliberate exception lives in `sawhorse`: `ReasoningEffort::None` short-circuits before the catalog
+is consulted. Clamping is right for choosing among *efforts*, but `none` is a caller policy about
+spending budget on thinking, and the catalog clamps it up to the nearest supported tier.
+
 ### What must **not** appear in `common/`
 
 Anything that needs a clock, a subprocess or a network is fine in `gaugeblock-git` (it is a process
