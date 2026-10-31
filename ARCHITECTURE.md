@@ -83,7 +83,7 @@ Rules:
 |:---|:---|
 | `GaugeblockPaths` — worktree-safe canonical `.gaugeblock/` resolution | `storypole_core::store::spool_path` parent-walking, `outfeed` root guessing, `chalkline` `-d` heuristics |
 | `WorkspaceTopology` — meta-harness root, the 11 member repositories, their `Cargo.toml` members | `chalkline --workspace`, `outfeed` suite manifests, `benchwork` repo enumeration |
-| `SuiteConfig` — `.gaugeblock/config.toml` and `.env` loading | per-tool config parsing in `outfeed`, `benchwork`, `joiner` |
+| `SuiteConfig`, `env_credentials` — `.gaugeblock/config.toml` and `.env` loading | per-tool config parsing in `outfeed`, `benchwork`, `joiner`, `sawhorse` |
 
 Rules:
 
@@ -113,6 +113,16 @@ all debt. Two shapes must not be converted:
   own tests rather than a rename that reads as mechanical.
 
 Consequently the ticket's "63 derivations" figure counts path literals, not migrations.
+
+All four types have now shipped - `GaugeblockPaths`, `WorkspaceTopology`, `MemberRepo`, `SuiteConfig`
+- with `env_credentials` for callers that want a provider key and have no use for the parsed table.
+`sawhorse` is the first consumer of the credential rules: it read the canonical dotenv through a
+private copy of them, so the two agreed only by coincidence. Its legacy plain `.env` fallback stays
+local, because parsing it here is cheaper than making the crate keep a second format.
+
+**Adoption still open:** `benchwork`, `outfeed` and `joiner` each parse a `[tool]` table out of
+`config.toml` themselves. Moving them is a behaviour change per tool - each has its own fallback
+ladder - so it belongs in its own tickets rather than being swept in with the type work.
 
 ### Model metadata is owned outside the suite (`GB-217`)
 
