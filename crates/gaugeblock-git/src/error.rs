@@ -24,6 +24,13 @@ pub enum GitError {
         /// Captured stderr, trimmed.
         stderr: String,
     },
+    /// A staging request named no paths.
+    ///
+    /// Refused rather than treated as "everything": scoped staging exists so a commit cannot acquire
+    /// files nobody asked for (`GB-150`, `GB-180`).
+    #[error("staging was given no paths; refusing to stage everything")]
+    EmptyScope,
+
     /// `git` succeeded but printed something that is not UTF-8.
     #[error("`git {command}` printed output that is not valid UTF-8")]
     NonUtf8 {
