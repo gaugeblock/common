@@ -55,6 +55,17 @@ impl Repository {
         })
     }
 
+    /// Clones `url` into `target` and opens it.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError::Failed`] when the clone fails - an unreachable remote, an occupied target - and
+    /// [`GitError::Spawn`] when git is missing.
+    pub fn clone(url: &str, target: &Path) -> Result<Self, GitError> {
+        run_git(Path::new("."), &["clone", url, &target.to_string_lossy()])?;
+        Self::discover(target)
+    }
+
     /// Root of the working tree.
     #[must_use]
     pub fn root(&self) -> &Path {

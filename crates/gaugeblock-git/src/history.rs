@@ -64,6 +64,61 @@ impl Repository {
 }
 
 /// Parses `%H\x1f%s` lines into commits, skipping the blank separators `rev-list` emits.
+/// How far a branch is ahead of and behind its upstream.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct AheadBehind {
+    /// Commits the local branch has that the upstream does not.
+    pub ahead: usize,
+    /// Commits the upstream has that the local branch does not.
+    pub behind: usize,
+}
+
+impl AheadBehind {
+    /// True when the local branch is level with its upstream.
+    #[must_use]
+    pub fn is_level(&self) -> bool {
+        self.ahead == 0 && self.behind == 0
+    }
+}
+
+impl Repository {
+    /// Nearest tag reachable from `HEAD`, if any.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError::Failed`] when the repository has no tags - which is the answer rather than a
+    /// fault, so a caller that treats "no release yet" as normal matches on the error.
+    pub fn describe_tags(&self) -> Result<String, GitError> {
+        run_git(self.root(), &["describe", "--tags", "--abbrev=0"])
+    }
+
+    /// Commits `branch` is ahead of and behind `upstream`.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError::Failed`] when either ref is unknown, which is how a missing upstream surfaces.
+    pub fn ahead_behind(&self, upstream: &str, branch: &str) -> Result<AheadBehind, GitError> {
+        let range = format!("{upstream}...{branch}");
+        let output = run_git(
+            self.root(),
+            &["rev-list", "--left-right", "--count", &range],
+        )?;
+        parse_ahead_behind(&output).ok_or_else(|| GitError::Failed {
+            command: "rev-list --left-right --count".to_string(),
+            code: 0,
+            stderr: format!("unexpected counts: {output}"),
+        })
+    }
+}
+
+/// Parses the two numbers `rev-list --left-right --count` prints: behind then ahead.
+fn parse_ahead_behind(output: &str) -> Option<AheadBehind> {
+    let mut parts = output.split_whitespace();
+    let behind = parts.next()?.parse().ok()?;
+    let ahead = parts.next()?.parse().ok()?;
+    Some(AheadBehind { ahead, behind })
+}
+
 fn parse_commits(output: &str) -> Vec<Commit> {
     output
         .lines()

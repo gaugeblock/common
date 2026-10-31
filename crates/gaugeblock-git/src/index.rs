@@ -76,6 +76,46 @@ impl Repository {
     }
 }
 
+impl Repository {
+    /// Checks out `rev`, leaving a detached HEAD when it is not a branch name.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError::Failed`] when the revision is unknown or the working tree would be overwritten.
+    pub fn checkout(&self, rev: &str) -> Result<(), GitError> {
+        run_git(self.root(), &["checkout", rev])?;
+        Ok(())
+    }
+
+    /// Fast-forwards the current branch from `remote`/`branch`, refusing anything that would merge.
+    ///
+    /// `--ff-only` is deliberate: a release tool that quietly creates a merge commit has changed
+    /// history it was asked to observe.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError::Failed`] when the branches have diverged or the remote is unreachable, carrying
+    /// stderr so the caller can tell which.
+    pub fn pull_ff_only(&self, remote: &str, branch: &str) -> Result<(), GitError> {
+        run_git(self.root(), &["pull", "--ff-only", remote, branch])?;
+        Ok(())
+    }
+
+    /// Discards local changes to `path`, restoring it from `HEAD`.
+    ///
+    /// # Errors
+    ///
+    /// [`GitError::Failed`] when the path is untracked - there is nothing in `HEAD` to restore, and
+    /// silently succeeding would hide a caller asking for the wrong file.
+    pub fn restore_path(&self, path: &Path) -> Result<(), GitError> {
+        run_git(
+            self.root(),
+            &["checkout", "HEAD", "--", &path.to_string_lossy()],
+        )?;
+        Ok(())
+    }
+}
+
 /// Whether `path` is tracked by the index.
 ///
 /// # Errors
