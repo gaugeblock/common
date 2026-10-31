@@ -45,3 +45,22 @@ fn test_unknown_upstream_tiers_are_rejected_rather_than_guessed() {
     assert!(serde_json::from_str::<ReasoningEffort>("\"extreme\"").is_err());
     assert!(serde_json::from_str::<ReasoningEffort>("\"minimal\"").is_err());
 }
+
+#[test]
+fn test_wire_token_matches_the_serde_form() {
+    // Two ways to name the same tier is one way for them to disagree.
+    for (effort, expected) in [
+        (ReasoningEffort::None, "none"),
+        (ReasoningEffort::Low, "low"),
+        (ReasoningEffort::Medium, "medium"),
+        (ReasoningEffort::High, "high"),
+        (ReasoningEffort::XHigh, "xhigh"),
+        (ReasoningEffort::Max, "max"),
+    ] {
+        assert_eq!(effort.wire_token(), expected);
+        assert_eq!(
+            serde_json::to_string(&effort).expect("serialize"),
+            format!("\"{expected}\"")
+        );
+    }
+}

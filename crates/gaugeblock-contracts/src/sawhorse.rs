@@ -78,6 +78,24 @@ pub enum ReasoningEffort {
     Max,
 }
 
+impl ReasoningEffort {
+    /// Canonical wire string for this tier.
+    ///
+    /// Kept in step with the serde representation by a test, so a payload builder can emit one
+    /// canonical field without going through JSON to find out what to call it (`GB-217` step 5).
+    #[must_use]
+    pub const fn wire_token(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::Low => "low",
+            Self::Medium => "medium",
+            Self::High => "high",
+            Self::XHigh => "xhigh",
+            Self::Max => "max",
+        }
+    }
+}
+
 /// A single inference request handed to a provider.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct InferenceRequest {
