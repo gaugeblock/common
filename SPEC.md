@@ -55,12 +55,30 @@ what stops a linked worktree from growing a second ledger and a second spool (`G
 | `dado` / `batten` | `TypedHole`, `DadoPattern`, `CompiledGrammarConstraint`, `GrammarFormat` | shipped (`GB-144`) |
 | `telemetry` | `AnonymizedSynthesisTrace`, `TelemetryTier`, `SpoolEntry`, `SyncStatus` | shipped (`GB-182`) |
 | `git` | `Repository`, `WorktreeInfo`, `Commit`, `CommitSummary`, `AheadBehind`, `GitError` | shipped (`GB-131`) |
+| `workspace` | `GaugeblockPaths`, `WorkspaceTopology`, `MemberRepo`, `WorkspaceError` | shipped (`GB-189`, in progress) |
 
 ### Planned crates
 
 | Domain | Types | Status |
 |:---|:---|:---|
-| `workspace` | `GaugeblockPaths`, `WorkspaceTopology`, `MemberRepo`, `SuiteConfig` | planned (`GB-189`) |
+
+### Workspace resolution
+
+`GaugeblockPaths` is the single answer to "where is `.gaugeblock/`" and `WorkspaceError` is the one
+way it refuses to answer:
+
+1. **The common dir decides, not the caller.** `discover` derives the directory from the git common
+dir, so a linked worktree and its parent resolve to the same `.gaugeblock/`. A worktree that resolved
+to its own directory would grow a second ledger and a second spool.
+2. **`NotARepository` is a refusal, not a gap.** Walking up to find "some" `.gaugeblock` is the
+ambiguity this type removes, so a path outside a repository is an error that names the path and
+carries the git failure that established it.
+3. **Two constructors, two meanings.** `discover` infers from a directory; `at` accepts a root the
+caller already knows. A tool handed a workspace root uses `at` and does not pretend to infer it.
+
+`WorkspaceTopology` keeps discovery and expectation apart: `discover` reports what is on disk and
+`expected_members` reports the eleven the suite should contain, so a missing checkout is reportable
+rather than invisible - an empty tree and a healthy workspace otherwise look identical.
 
 ### Git process boundary
 
