@@ -1,0 +1,12 @@
+[package]
+name = "gaugeblock-security"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+readme.workspace = true
+description = "AST-aware secret redaction and entropy detection shared by every suite product"
+
+[lints]
+workspace = true
