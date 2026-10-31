@@ -54,13 +54,32 @@ what stops a linked worktree from growing a second ledger and a second spool (`G
 | `sawhorse` | `ExecutionMode`, `ModelRole`, `ReasoningEffort`, `InferenceRequest`, `InferenceResponse` | shipped (`GB-144`) |
 | `dado` / `batten` | `TypedHole`, `DadoPattern`, `CompiledGrammarConstraint`, `GrammarFormat` | shipped (`GB-144`) |
 | `telemetry` | `AnonymizedSynthesisTrace`, `TelemetryTier`, `SpoolEntry`, `SyncStatus` | shipped (`GB-182`) |
+| `git` | `Repository`, `WorktreeInfo`, `Commit`, `CommitSummary`, `AheadBehind`, `GitError` | shipped (`GB-131`) |
 
 ### Planned crates
 
 | Domain | Types | Status |
 |:---|:---|:---|
-| `git` | `RepoInfo`, `WorktreeInfo`, `CommitRange`, `CommitSummary` | planned (`GB-131`) |
 | `workspace` | `GaugeblockPaths`, `WorkspaceTopology`, `MemberRepo`, `SuiteConfig` | planned (`GB-189`) |
+
+### Git process boundary
+
+Every `gaugeblock-git` fallible call returns `GitError`, which is the crate's only error type and its
+boundary with the rest of the suite. Three rules make it useful rather than decorative:
+
+1. **Stderr is carried.** `Failed` holds the exit code and git's own stderr, trimmed. A caller that
+   reports "git failed" without those has thrown away the only part that says which of the plausible
+   causes it was - a dirty worktree, a branch checked out elsewhere, a rejected push.
+2. **Facts are not faults.** `is_ancestor`, `has_staged_changes` and `is_tracked` map git's exit code
+   1 to `Ok(false)`. "Not an ancestor" and "nothing staged" are answers, and surfacing them as
+   errors would force every caller to unwrap a non-error.
+3. **Refusals are typed where the reason is structural.** `EmptyScope` exists because an empty path
+   list is the request that means "stage everything", which is the `GB-150` hazard; the variant
+   names the refusal rather than leaving it to a message string.
+
+A caller never inspects `Failed.code` to decide policy. If a distinction matters - present versus
+absent, tracked versus untracked - the crate exposes a method that answers it as a boolean or an
+`Option`, so the exit-code convention lives in one place.
 
 ### Telemetry outbox record
 
