@@ -124,6 +124,20 @@ local, because parsing it here is cheaper than making the crate keep a second fo
 `config.toml` themselves. Moving them is a behaviour change per tool - each has its own fallback
 ladder - so it belongs in its own tickets rather than being swept in with the type work.
 
+### `gaugeblock-security` — redaction every product may use
+
+Extracted from `miter` in `GB-158`, pulled forward by `GB-204`. It has **no dependencies at all**, which
+is exactly why it belongs here: `rabbet` and `joiner` both needed `scrub_source_text`, and reaching into
+another product's engine for a std-only helper is a lateral edge that buys nothing. `rabbet-core ->
+miter-engine` existed solely for that call and is now a downward edge to this crate.
+
+Rules:
+
+1. **Foundation, not product.** Redaction is not a miter concern; anything that writes telemetry, spools
+   or logs needs it.
+2. **No dependencies, ever.** A dependency here would make every consumer of redaction inherit it.
+3. **`miter` re-exports it as `security`**, so paths written before the move still resolve.
+
 ### `gaugeblock-mcp` — how a server speaks JSON-RPC
 
 | Owns | Replaces |
