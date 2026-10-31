@@ -124,6 +124,34 @@ local, because parsing it here is cheaper than making the crate keep a second fo
 `config.toml` themselves. Moving them is a behaviour change per tool - each has its own fallback
 ladder - so it belongs in its own tickets rather than being swept in with the type work.
 
+### `gaugeblock-mcp` — how a server speaks JSON-RPC
+
+| Owns | Replaces |
+|:---|:---|
+| `RpcRequest`, `RpcResponse`, `ToolOutcome`, error codes, `PROTOCOL_VERSION` | the `json!` literals each server built by hand |
+| `route` + `McpHandler` / `AsyncMcpHandler` | the seven copies of the `match method` ladder |
+| `serve` / `serve_async` / `handle_line` | the seven stdin loops, including their failure paths |
+
+Rules:
+
+1. **The transport owns the wire, the tool layer owns the data.** A tool returns `ToolOutcome::Json` or
+   `ToolOutcome::Failed`; building the MCP `content` envelope is not a tool's job. `ToolOutcome::Raw`
+   exists for the three dispatchers that still do it, and is documented as transitional.
+2. **A malformed line is answered, not dropped.** `-32700` with `id: null`, then the loop continues.
+   One bad message must not end a session, and silence is indistinguishable from a hang.
+3. **A failed tool is a successful call.** MCP reserves `error` for protocol faults, so a tool failure
+   travels in `content` with `isError`. Only routing faults produce a JSON-RPC `error`.
+4. **Routing is shared by both loops.** `serve` and `serve_async` classify requests through `route`, so
+   the asynchronous servers cannot answer `initialize` differently from the synchronous ones - which is
+   how the original seven drifted.
+5. **No executor dependency.** `serve_async` is a plain `async fn` over `std::future::Future`; the
+   caller's runtime drives it.
+
+Adoption (`GB-130`): all seven stdio servers - `batten`, `joiner`, `outfeed`, `benchwork`,
+`storypole`, `chalkline`, `dado`. `miter` keeps a typed `JsonRpcRequest`/`JsonRpcResponse` pair of its
+`own and is the remaining copy; migrating it is a design change to a typed protocol rather than a loop
+replacement, and is deferred.
+
 ### Model metadata is owned outside the suite (`GB-217`)
 
 One boundary is not in `common/` at all, and it is worth stating next to the others because it has the

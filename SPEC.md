@@ -56,11 +56,26 @@ what stops a linked worktree from growing a second ledger and a second spool (`G
 | `telemetry` | `AnonymizedSynthesisTrace`, `TelemetryTier`, `SpoolEntry`, `SyncStatus` | shipped (`GB-182`) |
 | `git` | `Repository`, `WorktreeInfo`, `Commit`, `CommitSummary`, `AheadBehind`, `GitError` | shipped (`GB-131`) |
 | `workspace` | `GaugeblockPaths`, `WorkspaceTopology`, `MemberRepo`, `SuiteConfig`, `WorkspaceError` | shipped (`GB-189`) |
+| `mcp` | `RpcRequest`, `RpcResponse`, `ToolOutcome`, `Route`, `McpHandler`, `AsyncMcpHandler`, `McpError` | shipped (`GB-130`) |
 
 ### Planned crates
 
 | Domain | Types | Status |
 |:---|:---|:---|
+
+### MCP wire rules
+
+`gaugeblock-mcp` is the single answer to what a Model Context Protocol server writes on stdout. Its
+boundary rules are the ones the seven hand-written copies disagreed about:
+
+1. **`parse` failure produces a response, not an error.** `McpError::Transport` covers only I/O: a
+   malformed line is answered with `-32700` and `id: null`, then the session continues.
+2. **A notification is never answered.** Notifications are classified before the method is looked at, so
+   a notification for an unknown method is silent rather than `-32601` - JSON-RPC forbids a reply.
+3. **A missing tool name is `-32602`, not silence.** Two servers answered nothing at all here, which a
+   client cannot distinguish from a hang.
+4. **A tool failure is a result.** MCP reserves `error` for protocol faults; a tool that ran and failed
+   returns `content` with `isError: true`, and `error` stays for routing faults only.
 
 ### Workspace resolution
 
