@@ -191,6 +191,56 @@ One deliberate exception lives in `sawhorse`: `ReasoningEffort::None` short-circ
 is consulted. Clamping is right for choosing among *efforts*, but `none` is a caller policy about
 spending budget on thinking, and the catalog clamps it up to the nearest supported tier.
 
+## 5. Admitting a crate to `common`
+
+The question comes up every time a member grows a second consumer, and it has been answered
+inconsistently: `gaugeblock-contracts` was admitted on a layering argument, `gaugeblock-security` on a
+"one home for redaction" argument, and `miter-syntax`/`miter-inventory` were once proposed on a
+direct-dependency count that `cargo tree` then refuted (`GB-160`). One written test, applied every
+time, is cheaper than three arguments.
+
+**A crate is admitted only if all four hold.** These are `GB-160`'s extraction criteria, extended with
+the placement rules the crates in this repo already obey.
+
+| # | Test | Why it is the test |
+|:--|:--|:--|
+| 1 | **At least two products consume it**, proved by `miter references` or `miter deps --layers`, never by intent | one consumer is a private module with extra publishing steps |
+| 2 | **A measured reduction exists** in at least one consumer: fewer transitive crates, or less clean build time | a hunch about weight is not a measurement; record the `cargo tree \| wc -l` before and after |
+| 3 | **No product vocabulary in the API** | `gaugeblock-git` "does not know what a `TaskNode` is"; a crate that names a product's types belongs to that product |
+| 4 | **No policy**: it answers questions about data it is handed | which repository, which config and which suite are decided by the caller |
+
+Two corollaries that resolve most arguments before they start:
+
+- **Same code at optional weight is a Cargo feature, not a crate.** The middle row of `GB-160`'s
+  table: most "split this out" instincts are a feature wearing an extraction's clothes.
+- **`common` is a set of crates, not a monolith.** A consumer depends on the specific crate it needs,
+  so a heavy one (the parser pulls a tree-sitter stack) does not infect the others. "It would make
+  `common` heavy" is therefore not by itself a reason to refuse.
+
+### The 2026-11-06 case, measured rather than argued
+
+`GB-203` split `miter-engine` into `miter-polyglot`, `miter-inventory` and `miter-analysis`, and
+`GB-204` repointed the consumers at the crate that owns each symbol. Transitive crate counts per
+consumer, `cargo tree --prefix none | sort -u | wc -l`, before and after the split plus repoint:
+
+| Consumer | Before | After | Delta | What left the tree |
+|:--|--:|--:|--:|:--|
+| `chalkline` | 153 | 75 | **-78** | redb, sqlparser, hcl-rs, dockerfile-parser, tree-sitter |
+| `dado` | 133 | 107 | **-26** | the same, minus the inventory half |
+| `joiner` | 264 | 250 | **-14** | the engine, kept the grammar table |
+| `benchwork` | 267 | 255 | **-12** | the same |
+
+That measurement settles test 2 for the *split*. It does not settle where the split-out crates should
+**live**, because the reduction is banked either way: `dado` links `miter-polyglot` from the miter repo
+or from this one and the count is identical. Relocation buys **independent versioning** - four
+products stop waiting on a `miter` release to bump a dependency - and an honest layer verdict. That is
+the whole of what it buys, and it is worth stating plainly rather than selling a move as a speedup.
+
+Verdict from the four tests, for the record: `miter-analysis` fails test 1 outright (no consumers
+outside `miter`). `miter-polyglot` and `miter-inventory` pass 1, 2 and 3; `miter-inventory` needs
+`extract_git_inventory` repointed at `gaugeblock-git` before it could pass test 4, since spawning `git`
+is that crate's charter, not inventory's.
+
 ### What must **not** appear in `common/`
 
 Anything that needs a clock, a subprocess or a network is fine in `gaugeblock-git` (it is a process
