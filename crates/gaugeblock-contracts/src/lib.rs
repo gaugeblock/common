@@ -12,6 +12,7 @@
 #![warn(missing_docs)]
 
 pub mod dado_batten;
+pub mod json;
 pub mod miter;
 pub mod outfeed;
 pub mod sawhorse;
