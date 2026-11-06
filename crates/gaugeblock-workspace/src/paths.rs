@@ -102,6 +102,22 @@ impl GaugeblockPaths {
         self.member("storypole").join("plans")
     }
 
+    /// The flight-recorder directory, `.gaugeblock/telemetry` (`GB-243`).
+    #[must_use]
+    pub fn telemetry_dir(&self) -> PathBuf {
+        self.root.join("telemetry")
+    }
+
+    /// The flight-recorder log, `.gaugeblock/telemetry/events.jsonl` (`GB-243`).
+    ///
+    /// One file for the whole suite, resolved through the git common dir like everything else here, so
+    /// a worktree appends to the same log the main checkout reads. It is gitignored: spans are machine
+    /// state, not source.
+    #[must_use]
+    pub fn telemetry_events(&self) -> PathBuf {
+        self.telemetry_dir().join("events.jsonl")
+    }
+
     /// The dotenv file holding secrets, resolved by `benchwork` and friends before the environment.
     ///
     /// It lives beside the config rather than inside a member directory because credentials are

@@ -5,7 +5,7 @@
 use std::fs;
 
 use gaugeblock_contracts::{SpanStatus, TelemetrySpan};
-use gaugeblock_workspace::{SpanGuard, append_span, now_ms};
+use gaugeblock_workspace::{GaugeblockPaths, SpanGuard, append_span, now_ms};
 use tempfile::TempDir;
 use uuid::Uuid;
 
@@ -95,6 +95,27 @@ fn emission_fails_open_when_the_path_cannot_be_written() {
         "the error exists"
     );
     assert!(!unwritable.exists(), "nothing was written");
+}
+
+#[test]
+fn the_canonical_telemetry_path_is_where_the_guard_writes() {
+    // Ties the two halves of AC2 together: the path comes from GaugeblockPaths and the guard writes it,
+    // so a caller never spells `.gaugeblock/telemetry/events.jsonl` itself.
+    let temp = TempDir::new().unwrap();
+    let paths = GaugeblockPaths::at(temp.path());
+    let events = paths.telemetry_events();
+
+    assert_eq!(
+        events,
+        temp.path()
+            .join(".gaugeblock")
+            .join("telemetry")
+            .join("events.jsonl")
+    );
+
+    SpanGuard::open(&events, span()).finish(SpanStatus::Ok);
+
+    assert!(events.is_file(), "the guard creates the canonical log");
 }
 
 #[test]
