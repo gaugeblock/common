@@ -53,7 +53,7 @@ what stops a linked worktree from growing a second ledger and a second spool (`G
 | `storypole` | `StorypoleConfig`, `WorkspaceConfig`, `DiscoveredMember`, `TaskNode`, `TaskKind`, `TaskStatus`, `TaskScope`, `TaskEdge`, `EdgeKind`, `TaskDecision`, `DecisionStatus`, `TaskPlan`, `PlanStep`, `AgentClaim`, `HandoffPacket`, `VerificationReceipt`, `TaskContextBriefing`, `LedgerEvent` | shipped (`GB-145`) |
 | `sawhorse` | `ExecutionMode`, `ModelRole`, `ReasoningEffort`, `InferenceRequest`, `InferenceResponse` | shipped (`GB-144`) |
 | `dado` / `batten` | `TypedHole`, `DadoPattern`, `CompiledGrammarConstraint`, `GrammarFormat` | shipped (`GB-144`) |
-| `telemetry` | `AnonymizedSynthesisTrace`, `TelemetryTier`, `SpoolEntry`, `SyncStatus` | shipped (`GB-182`) |
+| `telemetry` | `AnonymizedSynthesisTrace`, `TelemetryTier`, `SpoolEntry`, `SyncStatus`, `TelemetrySpan`, `SpanStatus` | shipped (`GB-182`, `GB-243`) |
 | `git` | `Repository`, `WorktreeInfo`, `Commit`, `CommitSummary`, `AheadBehind`, `GitError` | shipped (`GB-131`) |
 | `workspace` | `GaugeblockPaths`, `WorkspaceTopology`, `MemberRepo`, `SuiteConfig`, `WorkspaceError` | shipped (`GB-189`) |
 | `mcp` | `RpcRequest`, `RpcResponse`, `ToolOutcome`, `Route`, `McpHandler`, `AsyncMcpHandler`, `McpError` | shipped (`GB-130`) |
