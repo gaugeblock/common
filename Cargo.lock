@@ -107,6 +107,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "gaugeblock-inventory"
+version = "0.1.0-beta.1"
+dependencies = [
+ "gaugeblock-git",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "toml",
+]
+
+[[package]]
 name = "gaugeblock-mcp"
 version = "0.1.0-beta.1"
 dependencies = [
@@ -568,6 +579,10 @@ name = "joiner-mcp"
 version = "0.1.0-beta.4"
 
 [[patch.unused]]
+name = "miter-analysis"
+version = "0.1.0-beta.4"
+
+[[patch.unused]]
 name = "miter-ast"
 version = "0.1.0-beta.4"
 
@@ -585,6 +600,10 @@ version = "0.1.0-beta.4"
 
 [[patch.unused]]
 name = "miter-mcp"
+version = "0.1.0-beta.4"
+
+[[patch.unused]]
+name = "miter-polyglot"
 version = "0.1.0-beta.4"
 
 [[patch.unused]]

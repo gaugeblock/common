@@ -1,0 +1,13 @@
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Check docs drift
+    Check {
+        /// Force flag
+        #[arg(long)]
+        force: bool,
+    },
+    /// Scaffold missing docs
+    Scaffold {
+        path: String,
+    },
+}

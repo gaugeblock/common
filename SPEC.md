@@ -57,6 +57,7 @@ what stops a linked worktree from growing a second ledger and a second spool (`G
 | `git` | `Repository`, `WorktreeInfo`, `Commit`, `CommitSummary`, `AheadBehind`, `GitError` | shipped (`GB-131`) |
 | `workspace` | `GaugeblockPaths`, `WorkspaceTopology`, `MemberRepo`, `SuiteConfig`, `WorkspaceError` | shipped (`GB-189`) |
 | `mcp` | `RpcRequest`, `RpcResponse`, `ToolOutcome`, `Route`, `McpHandler`, `AsyncMcpHandler`, `McpError` | shipped (`GB-130`) |
+| `inventory` | `WorkspaceInventory`, `CrateInventory`, `CliCommandInventory`, `CliArgInventory`, `PublicTypeInventory`, `GitInventory`, `ToolchainInventory`, `InventoryError` | shipped (`GB-204`) |
 
 ### Planned crates
 

@@ -25,6 +25,11 @@ under two seconds.
 |:---|:---|:---|
 | `gaugeblock-common` | `.` | Facade re-exporting every contract domain |
 | `gaugeblock-contracts` | `crates/gaugeblock-contracts` | Pure wire types mirroring `CONTRACTS.md` |
+| `gaugeblock-git` | `crates/gaugeblock-git` | Repository, worktree and ref-range process boundary (`GB-131`) |
+| `gaugeblock-workspace` | `crates/gaugeblock-workspace` | Canonical `.gaugeblock/` paths, suite topology, `SuiteConfig` (`GB-189`) |
+| `gaugeblock-security` | `crates/gaugeblock-security` | Redaction and secret detection; no dependencies at all (`GB-158`) |
+| `gaugeblock-inventory` | `crates/gaugeblock-inventory` | Workspace inventory: Cargo manifests, toolchains, public types, CLI surface, git metadata (`GB-204`) |
+| `gaugeblock-mcp` | `crates/gaugeblock-mcp` | JSON-RPC stdio server plumbing shared by the tool MCP servers (`GB-130`) |
 
 ## 3. Usage
 

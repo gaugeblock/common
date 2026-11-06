@@ -236,10 +236,16 @@ or from this one and the count is identical. Relocation buys **independent versi
 products stop waiting on a `miter` release to bump a dependency - and an honest layer verdict. That is
 the whole of what it buys, and it is worth stating plainly rather than selling a move as a speedup.
 
-Verdict from the four tests, for the record: `miter-analysis` fails test 1 outright (no consumers
-outside `miter`). `miter-polyglot` and `miter-inventory` pass 1, 2 and 3; `miter-inventory` needs
-`extract_git_inventory` repointed at `gaugeblock-git` before it could pass test 4, since spawning `git`
-is that crate's charter, not inventory's.
+Verdict from the four tests, for the record. `miter-analysis` fails test 1 outright (no consumers
+outside `miter`) and stays. `miter-inventory` passed all four and **moved here as
+`gaugeblock-inventory`** in `GB-204`: its dependencies were `gaugeblock-git`, `serde`, `toml` and
+`thiserror`, it spawned no process itself, and it carried no miter vocabulary, so
+`benchwork-core -> gaugeblock-inventory` and `chalkline-core -> gaugeblock-inventory` are now downward
+edges. `miter-polyglot` is the one that did **not** pass: it constructs `miter_ast::AstIndexer`,
+`FunctionSymbol`, `FunctionNode` and `Param` (`miter/crates/polyglot/src/symbol.rs:42-91`), so placing
+it here would put a foundation crate on top of a `miter` domain crate - an upward edge, which the
+layer model forbids. It waits on `GB-246`, which extracts that vocabulary first. A relocation that
+needed an illegal edge to work is not a relocation, and the allowlist entry that remains says so.
 
 ### What must **not** appear in `common/`
 
