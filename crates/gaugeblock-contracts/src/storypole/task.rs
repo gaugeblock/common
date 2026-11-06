@@ -24,6 +24,13 @@ pub enum TaskKind {
     TechDebt,
     /// Time-boxed investigation with an open-ended outcome.
     Spike,
+    /// Housekeeping that changes no behaviour and adds no capability: version bumps, dependency
+    /// refreshes, file moves, cleanup sweeps.
+    ///
+    /// Distinct from [`TaskKind::Refactor`], which restructures code that runs. The distinction matters
+    /// to the verification gate: a refactor must preserve behaviour and therefore needs tests, while a
+    /// chore has no behaviour to preserve.
+    Chore,
 }
 
 /// Lifecycle state of a task.
