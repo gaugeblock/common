@@ -1,3 +1,7 @@
 target/
 **/target/
 .DS_Store
+
+# Flight-recorder spans (GB-243): one append-only log plus its index. Machine state, not source;
+# the schema they follow lives in gaugeblock-contracts.
+.gaugeblock/telemetry/
