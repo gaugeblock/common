@@ -125,6 +125,7 @@ pub enum LedgerEvent {
         /// Mutation timestamp in epoch milliseconds.
         timestamp_ms: u64,
     },
+    /// A lease was acquired on a task.
     TaskClaimed {
         /// Claimed task.
         task_id: Uuid,
