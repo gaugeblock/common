@@ -103,6 +103,28 @@ pub enum LedgerEvent {
         timestamp_ms: u64,
     },
     /// An agent acquired a lease on a task.
+    /// A task was archived out of active backlog views.
+    ///
+    /// Archiving is a state, not a status (`GB-179`): the task keeps the status it earned and this
+    /// event only records *when* it left the active backlog. It exists because the original encoding
+    /// was `StatusChanged { to: Archived }`, which claimed a status transition to a variant that is
+    /// never a status; the replayer special-cased it. That special case stays, for the events already
+    /// written, but new archives say what they mean (`GB-258`).
+    TaskArchived {
+        /// Archived task.
+        task_id: Uuid,
+        /// Status the task keeps while archived.
+        status: TaskStatus,
+        /// Mutation timestamp in epoch milliseconds.
+        timestamp_ms: u64,
+    },
+    /// A task was restored to the active backlog.
+    TaskUnarchived {
+        /// Restored task.
+        task_id: Uuid,
+        /// Mutation timestamp in epoch milliseconds.
+        timestamp_ms: u64,
+    },
     TaskClaimed {
         /// Claimed task.
         task_id: Uuid,
