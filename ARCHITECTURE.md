@@ -120,9 +120,18 @@ All four types have now shipped - `GaugeblockPaths`, `WorkspaceTopology`, `Membe
 private copy of them, so the two agreed only by coincidence. Its legacy plain `.env` fallback stays
 local, because parsing it here is cheaper than making the crate keep a second format.
 
-**Adoption still open:** `benchwork`, `outfeed` and `joiner` each parse a `[tool]` table out of
-`config.toml` themselves. Moving them is a behaviour change per tool - each has its own fallback
-ladder - so it belongs in its own tickets rather than being swept in with the type work.
+**Adoption state, measured 2026-11-06** (`GB-189`). Every consumer that reads the unified configuration
+now resolves its path through `GaugeblockPaths`: `storypole` (two loaders), `miter` (unified and
+tool config), `benchwork` (reader and writer, plus credentials through `env_credentials`), and
+`sawhorse` (the canonical dotenv). `outfeed` and `joiner` do not read `.gaugeblock/config.toml` at all
+— an earlier version of this paragraph claimed they parse a `[tool]` table themselves, which was wrong.
+
+What remains is not a refactor but a design line. `SuiteConfig` deliberately exposes the *generic*
+table and env map, and each tool keeps its own typed reading, because a typed struct per tool in this
+crate would invert the dependency graph — the same reason the crate exists. So "SuiteConfig is the only
+reader" is not the target; "every tool resolves the path here, and generic reading goes through this
+crate" is.
+
 
 ### `gaugeblock-security` — redaction every product may use
 
