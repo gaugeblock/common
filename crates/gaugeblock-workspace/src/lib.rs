@@ -17,7 +17,7 @@ mod topology;
 
 pub use paths::GaugeblockPaths;
 pub use suite_config::{SuiteConfig, env_credentials};
-pub use telemetry::{SpanGuard, append_span, now_ms};
+pub use telemetry::{SpanGuard, TRACE_ENV, ambient_trace_id, append_span, now_ms};
 pub use topology::{MemberRepo, WorkspaceTopology};
 
 /// Failures from workspace resolution.

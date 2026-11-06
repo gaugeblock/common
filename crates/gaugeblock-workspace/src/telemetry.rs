@@ -20,6 +20,27 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use gaugeblock_contracts::{SpanStatus, TelemetrySpan};
 
+/// Trace id of the run this process belongs to, set by a parent so child spans join it (`GB-243`).
+pub const TRACE_ENV: &str = "GAUGEBLOCK_TRACE_ID";
+
+/// Reads the ambient trace id, if the caller was started inside an instrumented run.
+///
+/// Returns `None` when the variable is absent or is not a UUID. Minting a replacement is deliberately
+/// *not* done here: whether to reuse one id per process (`outfeed gate`, one trace per run) or mint per
+/// call (`sawhorse`, one trace per uninstrumented completion) is a policy the consumer owns, and a
+/// shared crate that picked one would be wrong for the other. What must not diverge is the variable
+/// name and the parse, and those live here.
+///
+/// No test covers the absent case: `set_var` is unsafe in edition 2024 and this workspace denies
+/// `unsafe_code`, so the variable cannot be manipulated from a test while other tests read it. The
+/// consumers' tests cover the fallback path instead.
+#[must_use]
+pub fn ambient_trace_id() -> Option<uuid::Uuid> {
+    std::env::var(TRACE_ENV)
+        .ok()
+        .and_then(|raw| uuid::Uuid::parse_str(raw.trim()).ok())
+}
+
 /// Appends one span as a single JSON line, creating the file and its directory when absent.
 ///
 /// # Errors

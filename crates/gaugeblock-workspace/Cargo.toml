@@ -15,6 +15,9 @@ workspace = true
 gaugeblock-contracts = "0.1.0-beta.1"
 gaugeblock-git = "0.1.0-beta.1"
 serde_json = "1.0"
+# Parsing the ambient trace id (GB-243). No `v4` feature: this crate never mints one - minting policy
+# belongs to the consumer, and keeping it out avoids forcing an RNG into the foundation layer.
+uuid = { version = "1", default-features = false }
 thiserror = "2.0"
 toml = "1.1"
 
