@@ -157,10 +157,13 @@ version = "0.1.0-beta.1"
 name = "gaugeblock-workspace"
 version = "0.1.0-beta.1"
 dependencies = [
+ "gaugeblock-contracts",
  "gaugeblock-git",
+ "serde_json",
  "tempfile",
  "thiserror",
  "toml",
+ "uuid",
 ]
 
 [[package]]

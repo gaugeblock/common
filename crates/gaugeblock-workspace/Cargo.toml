@@ -12,9 +12,12 @@ description = "Canonical .gaugeblock paths and suite topology for the gaugeblock
 workspace = true
 
 [dependencies]
+gaugeblock-contracts = "0.1.0-beta.1"
 gaugeblock-git = "0.1.0-beta.1"
+serde_json = "1.0"
 thiserror = "2.0"
 toml = "1.1"
 
 [dev-dependencies]
 tempfile = "3.10"
+uuid = { version = "1", default-features = false }
