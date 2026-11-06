@@ -44,6 +44,22 @@ impl WorkspaceTopology {
     /// linked worktree, and skipping it would make a worktree-based workspace look empty.
     #[must_use]
     pub fn discover(suite_root: &Path) -> Self {
+        Self::discover_with(suite_root, |path| path.join(".git").exists())
+    }
+
+    /// Discovers members by a caller-supplied qualification rule.
+    ///
+    /// `.git` is the right rule for this suite and the wrong rule for a consumer whose workspaces are
+    /// plain directories: `storypole` accepts a member that holds `.storypole` or `Cargo.toml` even
+    /// when it is not a checkout, and narrowing that would break its standalone use. The rule is a
+    /// parameter so the shared model - the suite root, the sorted member list, the expected-versus-
+    /// present distinction - is reused without imposing one product's discovery policy on another
+    /// (`GB-189`).
+    ///
+    /// The predicate receives each immediate child directory that is not hidden; hidden directories
+    /// are skipped because every dot directory in a suite root is tool state, never a member.
+    #[must_use]
+    pub fn discover_with(suite_root: &Path, qualifies: impl Fn(&Path) -> bool) -> Self {
         let mut members = Vec::new();
         if let Ok(entries) = std::fs::read_dir(suite_root) {
             for entry in entries.flatten() {
@@ -51,13 +67,12 @@ impl WorkspaceTopology {
                 if !path.is_dir() {
                     continue;
                 }
-                let dot_git = path.join(".git");
-                if !dot_git.exists() {
-                    continue;
-                }
                 let Some(name) = path.file_name().and_then(|n| n.to_str()) else {
                     continue;
                 };
+                if name.starts_with('.') || !qualifies(&path) {
+                    continue;
+                }
                 members.push(MemberRepo {
                     name: name.to_string(),
                     path,
