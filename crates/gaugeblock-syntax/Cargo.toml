@@ -1,0 +1,21 @@
+[package]
+name = "gaugeblock-syntax"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Grammar table and syntax diagnostics over the shared Language vocabulary"
+
+[lints]
+workspace = true
+
+[dependencies]
+# The wire vocabulary is the shared one; this crate adds the reading of it, not a second enum.
+gaugeblock-contracts = { path = "../gaugeblock-contracts", version = "0.1.0-beta.1" }
+# Versions pinned here rather than inherited: `common` has no workspace dependency table, and these are the
+# versions miter already builds against (`miter/Cargo.toml`), so the two cannot diverge silently.
+tree-sitter = "0.24"
+tree-sitter-rust = "0.23"
+tree-sitter-typescript = "0.23"
+tree-sitter-python = "0.23"

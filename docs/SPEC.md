@@ -78,6 +78,25 @@ boundary rules are the ones the seven hand-written copies disagreed about:
 4. **A tool failure is a result.** MCP reserves `error` for protocol faults; a tool that ran and failed
    returns `content` with `isError: true`, and `error` stays for routing faults only.
 
+### Syntax vocabulary and diagnostics
+
+`gaugeblock-syntax` answers one question for the suite: does this source parse, and where exactly is it
+malformed. It reads the shared wire enum `gaugeblock_contracts::Language` rather than defining a second
+language set, because a second enum is a second table that can disagree with the first (`GB-246`).
+
+`grammar::SyntaxError` is the boundary type:
+
+| Variant | Meaning | Consumer behaviour |
+| --- | --- | --- |
+| `Unsupported { language }` | A declarative format (SQL, HTML, CSS, Markdown, Docker, HCL, Kubernetes) has no syntax tree to walk | Callers that validate before writing must treat this as "nothing to check", not as a failure |
+| `Grammar { language, message }` | The compiled grammar could not be loaded or the parser rejected it | A build defect, not an input defect |
+| `Parse { language }` | `tree-sitter` returned no tree | Malformed input, reported like a diagnostic |
+
+`syntax::SyntaxDiagnostic` positions each malformed span for a human (`line`, `column`) and for a fixer
+(`start_byte`, `end_byte`), with the snippet sliced on character boundaries so a diagnostic never panics
+on multi-byte source. An empty diagnostic vector means the grammar accepted the code: absence of findings
+is the success signal, and it is the only one.
+
 ### Workspace resolution
 
 `GaugeblockPaths` is the single answer to "where is `.gaugeblock/`" and `WorkspaceError` is the one

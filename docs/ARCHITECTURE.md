@@ -24,7 +24,10 @@ graph TD
 
 ## 2. Design rules
 
-1. One crate (`gaugeblock-contracts`) holds every wire type; the facade crate exists so members can
+1. Every question two products ask is answered by a foundation crate rather than by one product answering
+   for the other. `gaugeblock-syntax` exists for one such question - "does this code parse?" - which both
+   `miter` and `dado` need and neither owns (`GB-246`).
+2. One crate (`gaugeblock-contracts`) holds every wire type; the facade crate exists so members can
    depend on `gaugeblock-common` without naming the sub-crate path.
 2. Domains are submodules (`outfeed::*`, `storypole::*`) re-exported at the root, so consumers can
    glob-import without paying for unused domains at the type level.
@@ -37,6 +40,7 @@ graph TD
 |:---|:---|:---|
 | `gaugeblock-contracts` | `serde`, `serde_json` | ~2 s |
 | `gaugeblock-common` | `gaugeblock-contracts` | re-export only |
+| `gaugeblock-syntax` | `gaugeblock-contracts`, `tree-sitter` + 3 grammars | grammar table and syntax diagnostics |
 
 ## 4. Planned crates: the `git` / `workspace` boundary
 
