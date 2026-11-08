@@ -67,7 +67,7 @@ pub struct HandoffPacket {
 }
 
 /// Evidence required to transition a task into `TaskStatus::Verified`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VerificationReceipt {
     /// Tool or system that ran verification (e.g. `miter-engine`, `cargo-test`, `human`).
     pub verifier: String,
@@ -93,6 +93,20 @@ pub struct VerificationReceipt {
     /// Ordered commits covering the branch delta.
     #[serde(default)]
     pub commit_shas: Vec<String>,
+    /// Repository whose checkout was verified, when the task is placed in a member.
+    ///
+    /// `None` means the receipt does not know which repository it measured - which is a fact about the
+    /// receipt, not a default. Before this field existed, a receipt for `miter` work named the harness
+    /// branch and the harness commit count, and nothing in it was wrong except what it was about
+    /// (`GB-313`).
+    #[serde(default)]
+    pub repo: Option<String>,
+    /// Configuration key whose verification chain ran: a crate name, a repo name, or `default`.
+    ///
+    /// A harness chain and a member chain are different commands, and two receipts that ran different
+    /// commands must not read the same (`GB-316`).
+    #[serde(default)]
+    pub chain_key: Option<String>,
 }
 
 impl AgentClaim {

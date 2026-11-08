@@ -77,6 +77,8 @@ fn sample_task() -> TaskNode {
             base_commit_sha: Some("eed7824".to_string()),
             head_commit_sha: Some("dd42b57".to_string()),
             commit_shas: vec!["dd42b57".to_string()],
+            repo: None,
+            chain_key: None,
         }),
         created_at_epoch_ms: 1,
         updated_at_epoch_ms: 5,
