@@ -42,6 +42,23 @@ chooses no repository and knows no suite vocabulary, so the edge `gaugeblock-wor
 directory from the git *common* dir rather than by walking up from the caller's directory — which is
 what stops a linked worktree from growing a second ledger and a second spool (`GB-189`, `GB-169`).
 
+### Invariant 8: Membership is declared, never inferred (`GB-324`)
+`WorkspaceTopology` reports what is *present* in a suite root; it cannot report what a suite *intends*.
+A member repository carries its own `.gaugeblock/` — an index, a stub, a docs configuration — so it is
+indistinguishable from a suite of one, and a suite root is itself a git repository containing members,
+which is indistinguishable from a repository containing a nested checkout.
+
+So the suite states its members in `[suite] members` in `.gaugeblock/config.toml`, read through
+`SuiteConfig::members`. Two consequences are deliberate:
+
+* A candidate that declares no members is **skipped**, not answered for. `Membership::containing` walks
+  past a directory that merely holds `.gaugeblock/`.
+* A suite that declares nothing **answers for nobody**, so a repository that cannot prove it belongs
+  somewhere keeps its own ledger. Adoption is a decision, never a fallback.
+
+Both proxies were tried and rejected: a hardcoded roster answered for one suite only, and a
+git-boundary walk could not separate member-of-suite from nested-checkout-of-repo.
+
 ---
 
 ## 2. Domain coverage
