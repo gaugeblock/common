@@ -17,6 +17,11 @@ fn member(root: &Path, name: &str) {
 fn each_member_of_a_suite_resolves_to_the_suite_and_to_itself() {
     let tmp = tempfile::tempdir().expect("tempdir");
     fs::create_dir_all(tmp.path().join(".gaugeblock")).expect("suite state");
+    fs::write(
+        tmp.path().join(".gaugeblock").join("config.toml"),
+        "[suite]\nmembers = [\"alpha\", \"beta\"]\n",
+    )
+    .expect("suite declaration");
     member(tmp.path(), "alpha");
     member(tmp.path(), "beta");
 

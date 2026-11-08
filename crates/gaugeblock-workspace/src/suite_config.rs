@@ -57,6 +57,29 @@ impl SuiteConfig {
         &self.paths
     }
 
+    /// The member repositories this suite declares, in declaration order (`GB-324`).
+    ///
+    /// A suite that declares nothing answers with an empty list, which is the safe direction: layout
+    /// alone cannot distinguish a member repository from a suite root, because a member carries its own
+    /// `.gaugeblock` and a suite root is itself a git repository containing members. Membership that
+    /// guesses is membership that adopts the wrong ledger (`GB-305`), so the roster is stated rather
+    /// than inferred.
+    ///
+    /// Written as `[suite] members = ["miter", ...]` in `.gaugeblock/config.toml`.
+    #[must_use]
+    pub fn members(&self) -> Vec<String> {
+        self.section("suite")
+            .and_then(|suite| suite.get("members"))
+            .and_then(|value| value.as_array())
+            .map(|array| {
+                array
+                    .iter()
+                    .filter_map(|entry| entry.as_str().map(ToString::to_string))
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
     /// One tool's table, e.g. `section("sawhorse")`.
     #[must_use]
     pub fn section(&self, name: &str) -> Option<&toml::Table> {

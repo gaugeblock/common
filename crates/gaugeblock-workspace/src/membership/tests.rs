@@ -15,6 +15,15 @@ fn member(suite_root: &Path, name: &str) {
 
 fn suite_root(root: &Path) {
     dir(&root.join(".gaugeblock"));
+    let members: Vec<String> = ["miter", "storypole", "alpha", "beta"]
+        .iter()
+        .map(|m| format!("\"{m}\""))
+        .collect();
+    fs::write(
+        root.join(".gaugeblock").join("config.toml"),
+        format!("[suite]\nmembers = [{}]\n", members.join(", ")),
+    )
+    .expect("suite declaration");
 }
 
 #[test]

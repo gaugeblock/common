@@ -11,6 +11,7 @@
 use std::path::PathBuf;
 
 use crate::paths::GaugeblockPaths;
+use crate::suite_config::SuiteConfig;
 use crate::topology::{MemberRepo, WorkspaceTopology};
 
 /// The suite a directory belongs to, and the member it sits within.
@@ -44,9 +45,12 @@ impl Membership {
             if !GaugeblockPaths::at(ancestor).root().is_dir() {
                 continue;
             }
-            // The nearest suite is the only candidate. If it does not list this path as a member, the
-            // answer is "not a member" rather than "look further up", because looking further up is
-            // exactly how work lands in a ledger it does not belong to.
+            // A directory holding `.gaugeblock` is not a suite for this question: a member carries one
+            // too (an index, a stub, a docs configuration). The declaration decides - a suite names its
+            // members in `[suite] members`, and a candidate that names nobody is skipped rather than
+            // answered for. Without this, `miter/crates/engine` resolved to `miter` treated as a suite
+            // of one, which is the same wrong answer `GaugeblockPaths::discover` gave (`GB-317`,
+            // `GB-324`).
             let relative = start.strip_prefix(ancestor).ok()?;
             let first = relative
                 .components()
@@ -54,6 +58,12 @@ impl Membership {
                 .as_os_str()
                 .to_string_lossy()
                 .to_string();
+            let declared = SuiteConfig::load(ancestor)
+                .map(|config| config.members())
+                .unwrap_or_default();
+            if !declared.iter().any(|member| member == &first) {
+                continue;
+            }
             let topology = WorkspaceTopology::discover(ancestor);
             let resolved = topology.member(&first).map(|member| Self {
                 suite_root: ancestor.to_path_buf(),
