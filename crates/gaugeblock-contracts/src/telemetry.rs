@@ -54,6 +54,14 @@ pub struct TelemetrySpan {
     /// Git branch, so work can be attributed when no task key exists.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub branch: Option<String>,
+    /// Repository the run touched, which the branch cannot answer alone (`GB-337`).
+    ///
+    /// Telemetry used to be one log per repository, so the file path said which repository a span belonged to.
+    /// Rooting the writer at the suite deletes that encoding: one log can no longer say which repository a
+    /// `miter` run touched, and a branch name does not disambiguate two worktrees on the same branch. Absent when
+    /// the run happened outside any checkout.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub repo: Option<String>,
     /// Current state of the span.
     pub status: SpanStatus,
     /// When the span opened, in epoch milliseconds.
@@ -90,6 +98,7 @@ impl TelemetrySpan {
             command: None,
             task_key: None,
             branch: None,
+            repo: None,
             status: SpanStatus::Running,
             started_at_ms,
             duration_ms: None,

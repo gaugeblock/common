@@ -83,3 +83,28 @@ fn a_minimal_line_deserialises_without_optional_keys() {
     assert_eq!(span.status, SpanStatus::Ok);
     assert!(span.command.is_none() && span.duration_ms.is_none());
 }
+
+#[test]
+fn a_span_can_say_which_repository_it_touched() {
+    // GB-337: rooting telemetry at the suite deletes the file path that used to encode this, so the record has to
+    // carry it. A branch name is not enough - two worktrees can be on the same branch.
+    let mut span = TelemetrySpan::open(Uuid::from_u128(1), "miter", Uuid::from_u128(2), 1_000);
+    span.repo = Some("benchwork".to_string());
+    span.branch = Some("main".to_string());
+
+    let line = serde_json::to_string(&span).unwrap();
+
+    assert!(line.contains(r#""repo":"benchwork""#), "{line}");
+    let parsed: TelemetrySpan = serde_json::from_str(&line).unwrap();
+    assert_eq!(parsed.repo.as_deref(), Some("benchwork"));
+}
+
+#[test]
+fn a_span_outside_a_checkout_omits_the_repository() {
+    // A run in a scratch directory has no repository, and an absent key is kinder to an older reader than a null.
+    let span = TelemetrySpan::open(Uuid::from_u128(3), "sawhorse", Uuid::from_u128(4), 1_000);
+
+    let line = serde_json::to_string(&span).unwrap();
+
+    assert!(!line.contains("repo"), "absent, not null: {line}");
+}
