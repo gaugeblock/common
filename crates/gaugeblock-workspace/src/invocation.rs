@@ -53,6 +53,13 @@ impl InvocationSpan {
     /// operations that happen to share an executable.
     #[must_use]
     pub fn start(binary: &str, command: Option<&str>) -> Self {
+        // The policy is consulted here, at the entry point, because `SpanGuard::open` takes a path and writes -
+        // it has no opinion about whether writing is allowed. Without this line the whole emission policy was
+        // inert on the only production path: `SP-2`'s config switch did nothing, and `GAUGEBLOCK_NO_TELEMETRY`
+        // did not stop an invocation span either. Found by setting `enabled = false` and watching the log grow.
+        if !crate::telemetry::emission_enabled() {
+            return Self { guard: None };
+        }
         let cwd = std::env::current_dir().unwrap_or_default();
         let Some(sink) = sink_path(&cwd) else {
             return Self { guard: None };
