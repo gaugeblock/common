@@ -1,0 +1,77 @@
+{
+  "ticket": {
+    "id": "b4f26da6-4572-4164-8be6-1726b2eb3eb7",
+    "ticket_key": "SP-2",
+    "slug": "add-telemetry-enabled-with-env-wins-precedence-b4f26d",
+    "title": "Add [telemetry] enabled with env-wins precedence",
+    "description": "ADR 0012 decided telemetry is switched off at runtime, with precedence env -> config -> default(true). The env half exists (GAUGEBLOCK_NO_TELEMETRY, GB-340); this is the config half.\n\nAdd [telemetry] with an `enabled` key to .gaugeblock/config.toml and consult it in gaugeblock_workspace::telemetry::emission_enabled, so the check stays in the one choke point every emitter already goes through rather than being repeated per tool.\n\nWHY THIS AND NOT A CARGO FEATURE, restated because it will be asked again: cargo features are additive. A downstream crate cannot switch one off - default-features = false only declines what the consumer would have enabled, and any other crate in the graph re-enables it. So a feature gate would look like an opt-out for exactly the case that motivates it (someone installing one tool) and would not be one. It would also save nothing: spans are contract types (ADR 0002), so uuid, serde and serde_json are already in the graph.\n\nDEFAULT true, deliberately. The honest cost is a directory a panel-less user never reads, bounded by rotation (GB-341); the honest benefit is that first_diagnostic records what failed on a lone tool with no benchwork installed, which is a real use the panel does not cover.\n\nTESTS: config false disables emission; env set disables emission even when config says true (precedence); absent config or absent key means enabled; and emission_enabled stays false in a test binary regardless of config, since GB-340 established that a test must not write the production log.\n\nDEPENDS: GB-338 gives the writer one location, so the config is read from the same place it writes.",
+    "kind": "feature",
+    "status": "deferred",
+    "priority": 3,
+    "scope": {
+      "repo": "common",
+      "crate_name": "gaugeblock-workspace",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "gaugeblock_workspace::telemetry::emission_enabled"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794251058799,
+    "updated_at_epoch_ms": 1794251058799
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "b4f26da6-4572-4164-8be6-1726b2eb3eb7",
+        "ticket_key": "SP-2",
+        "slug": "add-telemetry-enabled-with-env-wins-precedence-b4f26d",
+        "title": "Add [telemetry] enabled with env-wins precedence",
+        "description": "ADR 0012 decided telemetry is switched off at runtime, with precedence env -> config -> default(true). The env half exists (GAUGEBLOCK_NO_TELEMETRY, GB-340); this is the config half.\n\nAdd [telemetry] with an `enabled` key to .gaugeblock/config.toml and consult it in gaugeblock_workspace::telemetry::emission_enabled, so the check stays in the one choke point every emitter already goes through rather than being repeated per tool.\n\nWHY THIS AND NOT A CARGO FEATURE, restated because it will be asked again: cargo features are additive. A downstream crate cannot switch one off - default-features = false only declines what the consumer would have enabled, and any other crate in the graph re-enables it. So a feature gate would look like an opt-out for exactly the case that motivates it (someone installing one tool) and would not be one. It would also save nothing: spans are contract types (ADR 0002), so uuid, serde and serde_json are already in the graph.\n\nDEFAULT true, deliberately. The honest cost is a directory a panel-less user never reads, bounded by rotation (GB-341); the honest benefit is that first_diagnostic records what failed on a lone tool with no benchwork installed, which is a real use the panel does not cover.\n\nTESTS: config false disables emission; env set disables emission even when config says true (precedence); absent config or absent key means enabled; and emission_enabled stays false in a test binary regardless of config, since GB-340 established that a test must not write the production log.\n\nDEPENDS: GB-338 gives the writer one location, so the config is read from the same place it writes.",
+        "kind": "feature",
+        "status": "deferred",
+        "priority": 3,
+        "scope": {
+          "repo": "common",
+          "crate_name": "gaugeblock-workspace",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "gaugeblock_workspace::telemetry::emission_enabled"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794251058799,
+        "updated_at_epoch_ms": 1794251058799
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_updated",
+      "task_id": "b4f26da6-4572-4164-8be6-1726b2eb3eb7",
+      "title": null,
+      "description": null,
+      "priority": 3,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794251066409
+    }
+  ]
+}
