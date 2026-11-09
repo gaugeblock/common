@@ -10,17 +10,19 @@
 //! `.gaugeblock/`, which is what `GB-169` needs in order to isolate agents without splitting the
 //! ledger.
 
+mod invocation;
 mod membership;
 mod paths;
 mod suite_config;
 mod telemetry;
 mod topology;
 
+pub use invocation::{InvocationSpan, sink_path};
 pub use paths::GaugeblockPaths;
 pub use suite_config::{SuiteConfig, env_credentials};
 pub use telemetry::{
     NO_TELEMETRY_ENV, SpanGuard, TRACE_ENV, ambient_trace_id, append_span, append_span_forced,
-    emission_enabled, now_ms, sink_path,
+    emission_enabled, now_ms,
 };
 pub use topology::{MemberRepo, WorkspaceTopology};
 
