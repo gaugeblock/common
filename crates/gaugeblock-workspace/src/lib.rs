@@ -20,7 +20,7 @@ pub use paths::GaugeblockPaths;
 pub use suite_config::{SuiteConfig, env_credentials};
 pub use telemetry::{
     NO_TELEMETRY_ENV, SpanGuard, TRACE_ENV, ambient_trace_id, append_span, append_span_forced,
-    emission_enabled, now_ms,
+    emission_enabled, now_ms, sink_path,
 };
 pub use topology::{MemberRepo, WorkspaceTopology};
 

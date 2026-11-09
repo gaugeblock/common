@@ -16,6 +16,9 @@
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+
+use crate::membership::Membership;
+use crate::paths::GaugeblockPaths;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use gaugeblock_contracts::{SpanStatus, TelemetrySpan};
@@ -149,6 +152,29 @@ impl Drop for SpanGuard {
     fn drop(&mut self) {
         self.write();
     }
+}
+
+/// Where this process should append spans (`GB-338`).
+///
+/// Telemetry is **derived, untracked** state, so it centralises: a suite of twelve repositories has one log, at the
+/// suite root, because there is nothing to merge and every worktree of a member already shares it through the common
+/// dir. The path follows the declared suite rather than the working directory, which is what made a member's spans
+/// invisible to a panel tailing the root.
+///
+/// Falls back to the repository's own directory when no declared suite lists the caller: a lone checkout must still
+/// record its own spans, and a user with several unrelated repositories has no suite to centralise into. `None`
+/// outside any checkout, where there is nowhere meaningful to write.
+#[must_use]
+pub fn sink_path(start: &Path) -> Option<PathBuf> {
+    // Canonicalised first because `Membership::containing` walks ancestors, and a relative path stops at the
+    // current directory - the defect that cost GB-327 a session.
+    let canonical = std::fs::canonicalize(start).unwrap_or_else(|_| start.to_path_buf());
+    if let Some(membership) = Membership::containing(&canonical) {
+        return Some(GaugeblockPaths::at(&membership.suite_root).telemetry_events());
+    }
+    GaugeblockPaths::discover(&canonical)
+        .ok()
+        .map(|paths| paths.telemetry_events())
 }
 
 /// Whether this process should record telemetry at all (`GB-340`).
