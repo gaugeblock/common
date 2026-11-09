@@ -94,6 +94,18 @@ impl SuiteConfig {
             .and_then(|value| value.as_str())
     }
 
+    /// A boolean inside a tool's table, e.g. `[telemetry] enabled = false` (`SP-2`).
+    ///
+    /// `None` means *not stated*, which is deliberately not the same as `false`: a suite that has never
+    /// configured telemetry should get the default rather than an accidental opt-out, so callers decide
+    /// what absence means. `Some(false)` is the only value that turns behaviour off.
+    #[must_use]
+    pub fn boolean(&self, section: &str, key: &str) -> Option<bool> {
+        self.section(section)
+            .and_then(|table| table.get(key))
+            .and_then(toml::Value::as_bool)
+    }
+
     /// The names of every configured tool, sorted.
     #[must_use]
     pub fn sections(&self) -> Vec<&str> {
