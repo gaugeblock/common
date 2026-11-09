@@ -90,10 +90,25 @@ impl GaugeblockPaths {
         self.spool_dir().join("outbox.jsonl")
     }
 
-    /// The storypole ledger.
+    /// The storypole ledger: the **legacy** layout.
+    ///
+    /// Named for what it is so that a caller has to choose it. Tickets are stored one file per ticket under
+    /// [`Self::storypole_tickets`] since ADR 0009, and a reader that hard-codes this path reads nothing in a
+    /// store that has migrated - silently, because an absent ledger looks like a store with no tickets
+    /// (`GB-348`, and `GB-349` is that bug in the wild). Prefer the store API, which answers whichever layout
+    /// applies; reach for this only when the ledger itself is the subject.
     #[must_use]
     pub fn ledger(&self) -> PathBuf {
         self.member("storypole").join("ledger.jsonl")
+    }
+
+    /// The storypole ticket-record directory, which is where state lives since ADR 0009.
+    ///
+    /// One file per ticket, named for its key. Read them through `storypole_core::state::load` rather than
+    /// here unless the directory itself is the subject: that call handles both layouts and this one does not.
+    #[must_use]
+    pub fn storypole_tickets(&self) -> PathBuf {
+        self.member("storypole").join("tickets")
     }
 
     /// The directory holding unabridged task plans (`GB-11` law 11).

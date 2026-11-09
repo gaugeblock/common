@@ -177,3 +177,15 @@ fn test_topology_discovers_git_repositories_and_reports_missing_expected_members
 
     std::fs::remove_dir_all(&base).ok();
 }
+
+#[test]
+fn the_ticket_directory_sits_beside_the_legacy_ledger() {
+    // GB-348: both paths are offered, and the legacy one says so, so a consumer has to choose rather than
+    // copying whichever filename it found first.
+    let paths = gaugeblock_workspace::GaugeblockPaths::at(std::path::Path::new("/repo"));
+    assert_eq!(
+        paths.storypole_tickets(),
+        paths.member("storypole").join("tickets")
+    );
+    assert!(paths.ledger().ends_with("storypole/ledger.jsonl"));
+}
