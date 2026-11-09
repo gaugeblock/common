@@ -70,6 +70,26 @@
       "scope": null,
       "acceptance_criteria": null,
       "timestamp_ms": 1794247494109
+    },
+    {
+      "event": "task_verified",
+      "task_id": "5fdbec46-1c09-4e61-ba27-385d99b5672d",
+      "receipt": {
+        "verifier": "storypole-verify:cargo-test-fallback",
+        "command": "cargo test",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\n[fallback: no verification command configured; ran `cargo test`]\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+        "verified_at_epoch_ms": 1794247507094,
+        "git_branch": "main",
+        "base_commit_sha": null,
+        "head_commit_sha": "85f61eca2063a77da57e6d60f68fa2bea9a73d39",
+        "commit_shas": [
+          "85f61eca2063a77da57e6d60f68fa2bea9a73d39"
+        ],
+        "repo": "common",
+        "chain_key": null
+      }
     }
   ]
 }

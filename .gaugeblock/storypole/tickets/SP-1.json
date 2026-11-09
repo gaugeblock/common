@@ -1,0 +1,77 @@
+{
+  "ticket": {
+    "id": "3ae64ad7-bd48-4c7b-8552-95bdb3a77921",
+    "ticket_key": "SP-1",
+    "slug": "a-task-scoped-to-a-repository-with-a-configured-chain-was-verified-by-the-cargo-test-fallback-3ae64a",
+    "title": "A task scoped to a repository with a configured chain was verified by the cargo-test fallback",
+    "description": "Found while verifying GB-337. The task is scoped to repo common with crate gaugeblock-contracts. The suite config HAS a chain keyed common, and the lookup order is crate, then repo, then default - so the repo key should have matched and run fmt/clippy/nextest/audit/docs. Instead the receipt says: no verification command configured for gaugeblock-contracts; falling back to cargo test, verifier storypole-verify:cargo-test-fallback.\n\nSo a ticket whose repository has a configured chain was certified by a weaker one. The receipt is honest about it - the warning exists and the verifier name differs - which is the good part and the reason this is a P2 rather than a P1: nothing is lying. But a weaker certification than the configuration promises is exactly the shape GB-272 and GB-316 were about, and it appeared for a ticket scoped to a repository that is in the list.\n\nWorth checking: whether the repo lookup uses the task scope.repo value or derives a name from the checkout directory, whether the common entry is keyed exactly common, and whether the receipt should refuse rather than fall back when a repository key exists but did not match - falling back silently is how a member chain came to run harness commands once before (GB-316).",
+    "kind": "bug",
+    "status": "triage",
+    "priority": 3,
+    "scope": {
+      "repo": "common",
+      "crate_name": "gaugeblock-contracts",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::ops::verification::receipts"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794247544661,
+    "updated_at_epoch_ms": 1794247544661
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "3ae64ad7-bd48-4c7b-8552-95bdb3a77921",
+        "ticket_key": "SP-1",
+        "slug": "a-task-scoped-to-a-repository-with-a-configured-chain-was-verified-by-the-cargo-test-fallback-3ae64a",
+        "title": "A task scoped to a repository with a configured chain was verified by the cargo-test fallback",
+        "description": "Found while verifying GB-337. The task is scoped to repo common with crate gaugeblock-contracts. The suite config HAS a chain keyed common, and the lookup order is crate, then repo, then default - so the repo key should have matched and run fmt/clippy/nextest/audit/docs. Instead the receipt says: no verification command configured for gaugeblock-contracts; falling back to cargo test, verifier storypole-verify:cargo-test-fallback.\n\nSo a ticket whose repository has a configured chain was certified by a weaker one. The receipt is honest about it - the warning exists and the verifier name differs - which is the good part and the reason this is a P2 rather than a P1: nothing is lying. But a weaker certification than the configuration promises is exactly the shape GB-272 and GB-316 were about, and it appeared for a ticket scoped to a repository that is in the list.\n\nWorth checking: whether the repo lookup uses the task scope.repo value or derives a name from the checkout directory, whether the common entry is keyed exactly common, and whether the receipt should refuse rather than fall back when a repository key exists but did not match - falling back silently is how a member chain came to run harness commands once before (GB-316).",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": "common",
+          "crate_name": "gaugeblock-contracts",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::ops::verification::receipts"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794247544661,
+        "updated_at_epoch_ms": 1794247544661
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_updated",
+      "task_id": "3ae64ad7-bd48-4c7b-8552-95bdb3a77921",
+      "title": null,
+      "description": null,
+      "priority": 2,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794247551872
+    }
+  ]
+}
