@@ -197,3 +197,26 @@ fn test_briefing_carries_bidirectional_link_summary() {
     let parsed: TaskContextBriefing = serde_json::from_value(value).expect("deserialize");
     assert_eq!(briefing, parsed);
 }
+
+#[test]
+fn the_docs_kind_round_trips_and_older_kinds_still_parse() {
+    // GB-342: adding a kind must not disturb what is already on disk. A ledger written before `docs`
+    // existed spells its kinds as snake_case strings, and those have to keep parsing byte-identically.
+    assert_eq!(serde_json::to_string(&TaskKind::Docs).unwrap(), "\"docs\"");
+    assert_eq!(
+        serde_json::from_str::<TaskKind>("\"docs\"").unwrap(),
+        TaskKind::Docs
+    );
+    for (wire, kind) in [
+        ("epic", TaskKind::Epic),
+        ("feature", TaskKind::Feature),
+        ("tech_debt", TaskKind::TechDebt),
+        ("chore", TaskKind::Chore),
+    ] {
+        assert_eq!(
+            serde_json::from_str::<TaskKind>(&format!("\"{wire}\"")).unwrap(),
+            kind,
+            "{wire} still parses"
+        );
+    }
+}

@@ -31,6 +31,12 @@ pub enum TaskKind {
     /// to the verification gate: a refactor must preserve behaviour and therefore needs tests, while a
     /// chore has no behaviour to preserve.
     Chore,
+    /// Documentation: prose that describes the system without changing what it does.
+    ///
+    /// Aligned with the Conventional Commits type of the same name, which law 7 already uses for exactly
+    /// this work. Distinct from [`TaskKind::Chore`], which is housekeeping with no narrative output: a
+    /// chore bumps a dependency, documentation explains the system to a reader.
+    Docs,
 }
 
 /// Lifecycle state of a task.
