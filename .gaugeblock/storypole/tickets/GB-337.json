@@ -60,6 +60,16 @@
         "created_at_epoch_ms": 1794167026778,
         "updated_at_epoch_ms": 1794167026778
       }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "5fdbec46-1c09-4e61-ba27-385d99b5672d",
+      "title": null,
+      "description": "TelemetrySpan carries span_id, trace_id, parent_span_id, binary, command, task_key, branch, status, started_at_ms, duration_ms and first_diagnostic, and no repository. Federation encoded ownership in the log path, so rooting telemetry at the suite deletes that encoding: one log could no longer say which repository a miter run touched, and branch does not disambiguate two worktrees on one branch name. Add repo. Also populate task_key where a span is opened: sawhorse completion_span sets command and never task_key, so both spans currently on disk carry neither field and the join to the spool sits at zero coverage. This is a contract change under ADR 0002 and lands before the writer moves.\n\nDONE 2026-11-08 (commit 29f9f87, common).\n\nTelemetrySpan carries repo: Option<String>, omitted when absent. Two tests: a span with a repository round-trips it,\nand one without omits the key rather than writing null.\n\nThis is the field the unified writer needs: the path used to encode the repository and rooting the writer at the suite\ndeletes that encoding, so without it a single log cannot answer which repository a miter run touched - and a branch\nname does not disambiguate two worktrees on the same branch.\n\nStill owed from the telemetry set: GB-338 (root the writer at the suite, delete the federating reader), GB-339 (one\nspan per CLI invocation across nine more tools), GB-340 (test runs must not write the production log), GB-341\n(retention, configurable and tracked separately from the ephemeral log).",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794247494109
     }
   ]
 }
