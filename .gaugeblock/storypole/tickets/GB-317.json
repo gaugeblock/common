@@ -1,0 +1,149 @@
+{
+  "ticket": {
+    "id": "9470370a-c7f8-4247-9ddc-009627e8e5e6",
+    "ticket_key": "GB-317",
+    "slug": "topology-cannot-answer-which-suite-contains-a-member-repo-so-cross-member-lookups-are-impossible-947037",
+    "title": "topology cannot answer which suite contains a member repo, so cross-member lookups are impossible",
+    "description": "IMPLEMENTED 2026-11-07 in common, branch feat/gb-317-membership, commit dd9f4ac: Membership::containing walks to the nearest suite holding .gaugeblock and answers only if that suite lists the containing directory as a member; membership is repository-granular so a nested checkout is not adopted. 4 unit tests plus 2 in a multi-repo-marked file (the audit gate demanded one). NOT YET VERIFIED: verifying it exposed two other defects - the chain lookup took the default fallback per key, so member work ran the harness chain (fixed in storypole a626638), and member chains call miter audit --paths which needs a repo-local index nothing creates (filed).",
+    "kind": "tech_debt",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": "common",
+      "crate_name": "gaugeblock-workspace",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "gaugeblock_workspace::GaugeblockPaths::discover,gaugeblock_workspace::WorkspaceTopology::discover"
+      ],
+      "labels": []
+    },
+    "edges": [
+      {
+        "kind": "related_to",
+        "target_id": "4484615a-db81-4bab-9b6c-63b8f5e6be90",
+        "target_ticket_key": "GB-316",
+        "target_repo": "storypole"
+      }
+    ],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (docs/CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794110649343,
+      "git_branch": "feat/gb-317-membership",
+      "base_commit_sha": "d44a0f1d97dfc6e659caf656971c41debd36f99c",
+      "head_commit_sha": "dd9f4ac8938931f27d34d82a1cf9f66a02afcece",
+      "commit_shas": [
+        "dd9f4ac8938931f27d34d82a1cf9f66a02afcece"
+      ],
+      "repo": "common",
+      "chain_key": "common"
+    },
+    "created_at_epoch_ms": 1794108393706,
+    "updated_at_epoch_ms": 1794110649343
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "9470370a-c7f8-4247-9ddc-009627e8e5e6",
+        "ticket_key": "GB-317",
+        "slug": "topology-cannot-answer-which-suite-contains-a-member-repo-so-cross-member-lookups-are-impossible-947037",
+        "title": "topology cannot answer which suite contains a member repo, so cross-member lookups are impossible",
+        "description": "",
+        "kind": "tech_debt",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": "common",
+          "crate_name": "gaugeblock-workspace",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "gaugeblock_workspace::GaugeblockPaths::discover,gaugeblock_workspace::WorkspaceTopology::discover"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794108393706,
+        "updated_at_epoch_ms": 1794108393706
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "edge_added",
+      "task_id": "9470370a-c7f8-4247-9ddc-009627e8e5e6",
+      "edge": {
+        "kind": "related_to",
+        "target_id": "4484615a-db81-4bab-9b6c-63b8f5e6be90",
+        "target_ticket_key": "GB-316",
+        "target_repo": "storypole"
+      },
+      "timestamp_ms": 1794108403993
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "9470370a-c7f8-4247-9ddc-009627e8e5e6",
+      "claim": {
+        "agent_id": "cline-agent",
+        "claimed_at_epoch_ms": 1794110108099,
+        "lease_expires_at_epoch_ms": 1794113708099,
+        "git_branch": "feat/gb-317-membership",
+        "base_commit_sha": "d44a0f1d97dfc6e659caf656971c41debd36f99c"
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "9470370a-c7f8-4247-9ddc-009627e8e5e6",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline-agent",
+      "timestamp_ms": 1794110108099
+    },
+    {
+      "event": "task_updated",
+      "task_id": "9470370a-c7f8-4247-9ddc-009627e8e5e6",
+      "title": null,
+      "description": "IMPLEMENTED 2026-11-07 in common, branch feat/gb-317-membership, commit dd9f4ac: Membership::containing walks to the nearest suite holding .gaugeblock and answers only if that suite lists the containing directory as a member; membership is repository-granular so a nested checkout is not adopted. 4 unit tests plus 2 in a multi-repo-marked file (the audit gate demanded one). NOT YET VERIFIED: verifying it exposed two other defects - the chain lookup took the default fallback per key, so member work ran the harness chain (fixed in storypole a626638), and member chains call miter audit --paths which needs a repo-local index nothing creates (filed).",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794110409176
+    },
+    {
+      "event": "task_verified",
+      "task_id": "9470370a-c7f8-4247-9ddc-009627e8e5e6",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (docs/CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794110649343,
+        "git_branch": "feat/gb-317-membership",
+        "base_commit_sha": "d44a0f1d97dfc6e659caf656971c41debd36f99c",
+        "head_commit_sha": "dd9f4ac8938931f27d34d82a1cf9f66a02afcece",
+        "commit_shas": [
+          "dd9f4ac8938931f27d34d82a1cf9f66a02afcece"
+        ],
+        "repo": "common",
+        "chain_key": "common"
+      }
+    }
+  ]
+}

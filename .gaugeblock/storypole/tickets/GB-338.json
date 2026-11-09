@@ -1,0 +1,65 @@
+{
+  "ticket": {
+    "id": "0fb9fc48-24fc-4182-be8c-11ee95578317",
+    "ticket_key": "GB-338",
+    "slug": "root-the-telemetry-writer-at-the-suite-and-delete-the-federating-reader-0fb9fc",
+    "title": "Root the telemetry writer at the suite and delete the federating reader",
+    "description": "Reverse the compensation. The flight recorder resolves the canonical directory of the working directory, so a suite of twelve repositories has twelve logs; the panel resolved one path from its own working directory, showed nothing, and GB-293 answered by writing a reader that enumerates every member log (telemetry_event_paths) instead of moving the writer. That reader was committed to benchwork-core and is never called, and the daemon still tails a single path (routes_telemetry.rs:58). Root the writer at the declared suite via Membership::containing on a canonicalised path, the canonicalisation being what GB-327 lost a session to, falling back to the repository root when no suite lists it. Delete telemetry_event_paths and the multi-tail. Telemetry is derived and untracked, so it centralises: there is nothing to merge and worktrees already share it through the common dir. Delete the stale sawhorse telemetry log rather than migrating it, and record in the ADR why it existed and why it is gone, so a future reader can tell never-used from deliberately-retired.",
+    "kind": "bug",
+    "status": "ready",
+    "priority": 1,
+    "scope": {
+      "repo": "common",
+      "crate_name": "gaugeblock-workspace",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [
+      "one log per suite; a run inside a member writes to the suite root and says so on stderr; no code path enumerates member logs; the stale sawhorse log is gone with an ADR paragraph explaining the before and after"
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794167026876,
+    "updated_at_epoch_ms": 1794167026876
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "0fb9fc48-24fc-4182-be8c-11ee95578317",
+        "ticket_key": "GB-338",
+        "slug": "root-the-telemetry-writer-at-the-suite-and-delete-the-federating-reader-0fb9fc",
+        "title": "Root the telemetry writer at the suite and delete the federating reader",
+        "description": "Reverse the compensation. The flight recorder resolves the canonical directory of the working directory, so a suite of twelve repositories has twelve logs; the panel resolved one path from its own working directory, showed nothing, and GB-293 answered by writing a reader that enumerates every member log (telemetry_event_paths) instead of moving the writer. That reader was committed to benchwork-core and is never called, and the daemon still tails a single path (routes_telemetry.rs:58). Root the writer at the declared suite via Membership::containing on a canonicalised path, the canonicalisation being what GB-327 lost a session to, falling back to the repository root when no suite lists it. Delete telemetry_event_paths and the multi-tail. Telemetry is derived and untracked, so it centralises: there is nothing to merge and worktrees already share it through the common dir. Delete the stale sawhorse telemetry log rather than migrating it, and record in the ADR why it existed and why it is gone, so a future reader can tell never-used from deliberately-retired.",
+        "kind": "bug",
+        "status": "ready",
+        "priority": 1,
+        "scope": {
+          "repo": "common",
+          "crate_name": "gaugeblock-workspace",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "one log per suite; a run inside a member writes to the suite root and says so on stderr; no code path enumerates member logs; the stale sawhorse log is gone with an ADR paragraph explaining the before and after"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794167026876,
+        "updated_at_epoch_ms": 1794167026876
+      }
+    }
+  ]
+}

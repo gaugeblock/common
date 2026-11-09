@@ -1,0 +1,119 @@
+{
+  "ticket": {
+    "id": "74efe148-6c47-4253-89c2-c8e982a8190b",
+    "ticket_key": "GB-324",
+    "slug": "a-suite-should-declare-its-members-so-membership-can-be-resolved-without-a-hardcoded-roster-74efe1",
+    "title": "A suite should declare its members, so membership can be resolved without a hardcoded roster",
+    "description": "Reaching the canonical ledger from inside a member repository needs the suite to DECLARE its members. Layout alone cannot answer it: a member carries its own .gaugeblock (an index, a stub, a docs config) and so looks exactly like a suite of one, and a suite root is itself a git repository containing members, which is indistinguishable from a repository containing a nested checkout.\n\nTwo candidate answers, both rejected as written:\n  * WorkspaceTopology::expected_members is a hardcoded roster. It answers for this suite and for no other, and it makes Membership untestable under fixture names.\n  * A git-boundary rule with \"nearest candidate wins\" cannot separate member-of-suite from nested-checkout-of-repo, because both have the store above the caller's own repository root.\n\nThe declaration should live in .gaugeblock/config.toml, e.g. [suite] members = [...], read through SuiteConfig, with absence meaning \"no members\" - the safe direction, since a repository that cannot prove it belongs somewhere keeps its own ledger.\n\nOnce that exists, GB-316's ledger-from-anywhere step is a two-line change in StorypoleStore::open, which already routes through store_locate and already prefers a ledger over a stub.",
+    "kind": "feature",
+    "status": "verified",
+    "priority": 2,
+    "scope": {
+      "repo": "common",
+      "crate_name": "gaugeblock-workspace",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "gaugeblock_workspace::Membership::containing,gaugeblock_workspace::SuiteConfig"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (docs/CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794111643289,
+      "git_branch": "main",
+      "base_commit_sha": "df04b19da4438dd5f1eecd59bb350993aebd4c28",
+      "head_commit_sha": "df04b19da4438dd5f1eecd59bb350993aebd4c28",
+      "commit_shas": [
+        "df04b19da4438dd5f1eecd59bb350993aebd4c28"
+      ],
+      "repo": "common",
+      "chain_key": "common"
+    },
+    "created_at_epoch_ms": 1794110881327,
+    "updated_at_epoch_ms": 1794111643289
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "74efe148-6c47-4253-89c2-c8e982a8190b",
+        "ticket_key": "GB-324",
+        "slug": "a-suite-should-declare-its-members-so-membership-can-be-resolved-without-a-hardcoded-roster-74efe1",
+        "title": "A suite should declare its members, so membership can be resolved without a hardcoded roster",
+        "description": "Reaching the canonical ledger from inside a member repository needs the suite to DECLARE its members. Layout alone cannot answer it: a member carries its own .gaugeblock (an index, a stub, a docs config) and so looks exactly like a suite of one, and a suite root is itself a git repository containing members, which is indistinguishable from a repository containing a nested checkout.\n\nTwo candidate answers, both rejected as written:\n  * WorkspaceTopology::expected_members is a hardcoded roster. It answers for this suite and for no other, and it makes Membership untestable under fixture names.\n  * A git-boundary rule with \"nearest candidate wins\" cannot separate member-of-suite from nested-checkout-of-repo, because both have the store above the caller's own repository root.\n\nThe declaration should live in .gaugeblock/config.toml, e.g. [suite] members = [...], read through SuiteConfig, with absence meaning \"no members\" - the safe direction, since a repository that cannot prove it belongs somewhere keeps its own ledger.\n\nOnce that exists, GB-316's ledger-from-anywhere step is a two-line change in StorypoleStore::open, which already routes through store_locate and already prefers a ledger over a stub.",
+        "kind": "feature",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": "common",
+          "crate_name": "gaugeblock-workspace",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "gaugeblock_workspace::Membership::containing,gaugeblock_workspace::SuiteConfig"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794110881327,
+        "updated_at_epoch_ms": 1794110881327
+      }
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "74efe148-6c47-4253-89c2-c8e982a8190b",
+      "claim": {
+        "agent_id": "cline-agent",
+        "claimed_at_epoch_ms": 1794111521312,
+        "lease_expires_at_epoch_ms": 1794115121312,
+        "git_branch": "main",
+        "base_commit_sha": "df04b19da4438dd5f1eecd59bb350993aebd4c28"
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "74efe148-6c47-4253-89c2-c8e982a8190b",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline-agent",
+      "timestamp_ms": 1794111521312
+    },
+    {
+      "event": "task_verified",
+      "task_id": "74efe148-6c47-4253-89c2-c8e982a8190b",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: .\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (docs/CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794111643289,
+        "git_branch": "main",
+        "base_commit_sha": "df04b19da4438dd5f1eecd59bb350993aebd4c28",
+        "head_commit_sha": "df04b19da4438dd5f1eecd59bb350993aebd4c28",
+        "commit_shas": [
+          "df04b19da4438dd5f1eecd59bb350993aebd4c28"
+        ],
+        "repo": "common",
+        "chain_key": "common"
+      }
+    }
+  ]
+}

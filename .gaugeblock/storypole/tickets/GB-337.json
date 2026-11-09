@@ -1,0 +1,65 @@
+{
+  "ticket": {
+    "id": "5fdbec46-1c09-4e61-ba27-385d99b5672d",
+    "ticket_key": "GB-337",
+    "slug": "add-the-repository-to-the-telemetry-span-contract-5fdbec",
+    "title": "Add the repository to the telemetry span contract",
+    "description": "TelemetrySpan carries span_id, trace_id, parent_span_id, binary, command, task_key, branch, status, started_at_ms, duration_ms and first_diagnostic, and no repository. Federation encoded ownership in the log path, so rooting telemetry at the suite deletes that encoding: one log could no longer say which repository a miter run touched, and branch does not disambiguate two worktrees on one branch name. Add repo. Also populate task_key where a span is opened: sawhorse completion_span sets command and never task_key, so both spans currently on disk carry neither field and the join to the spool sits at zero coverage. This is a contract change under ADR 0002 and lands before the writer moves.",
+    "kind": "feature",
+    "status": "ready",
+    "priority": 1,
+    "scope": {
+      "repo": "common",
+      "crate_name": "gaugeblock-contracts",
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [
+      "a span round-trips repo; a span with no repo is legal for a run outside any checkout and the panel groups unknowns explicitly; the two fields are populated by the emitting helper, proven by a test that opens a span with a task key"
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794167026778,
+    "updated_at_epoch_ms": 1794167026778
+  },
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "id": "5fdbec46-1c09-4e61-ba27-385d99b5672d",
+        "ticket_key": "GB-337",
+        "slug": "add-the-repository-to-the-telemetry-span-contract-5fdbec",
+        "title": "Add the repository to the telemetry span contract",
+        "description": "TelemetrySpan carries span_id, trace_id, parent_span_id, binary, command, task_key, branch, status, started_at_ms, duration_ms and first_diagnostic, and no repository. Federation encoded ownership in the log path, so rooting telemetry at the suite deletes that encoding: one log could no longer say which repository a miter run touched, and branch does not disambiguate two worktrees on one branch name. Add repo. Also populate task_key where a span is opened: sawhorse completion_span sets command and never task_key, so both spans currently on disk carry neither field and the join to the spool sits at zero coverage. This is a contract change under ADR 0002 and lands before the writer moves.",
+        "kind": "feature",
+        "status": "ready",
+        "priority": 1,
+        "scope": {
+          "repo": "common",
+          "crate_name": "gaugeblock-contracts",
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "a span round-trips repo; a span with no repo is legal for a run outside any checkout and the panel groups unknowns explicitly; the two fields are populated by the emitting helper, proven by a test that opens a span with a task key"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794167026778,
+        "updated_at_epoch_ms": 1794167026778
+      }
+    }
+  ]
+}
