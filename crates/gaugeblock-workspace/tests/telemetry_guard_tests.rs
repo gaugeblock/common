@@ -5,7 +5,7 @@
 use std::fs;
 
 use gaugeblock_contracts::{SpanStatus, TelemetrySpan};
-use gaugeblock_workspace::{GaugeblockPaths, SpanGuard, append_span, now_ms};
+use gaugeblock_workspace::{GaugeblockPaths, SpanGuard, append_span_forced, now_ms};
 use tempfile::TempDir;
 use uuid::Uuid;
 
@@ -41,7 +41,7 @@ fn the_file_and_its_directory_are_created_when_missing() {
     let path = temp.path().join("deep").join("nested").join("events.jsonl");
     assert!(!path.exists());
 
-    append_span(&path, &span()).expect("creates the file");
+    append_span_forced(&path, &span()).expect("creates the file");
 
     assert!(path.is_file(), "emission creates the file");
 }
@@ -91,7 +91,7 @@ fn emission_fails_open_when_the_path_cannot_be_written() {
     guard.finish(SpanStatus::Error);
 
     assert!(
-        append_span(&unwritable, &span()).is_err(),
+        append_span_forced(&unwritable, &span()).is_err(),
         "the error exists"
     );
     assert!(!unwritable.exists(), "nothing was written");
