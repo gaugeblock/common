@@ -1,0 +1,260 @@
+{
+  "ticket": {
+    "id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+    "ticket_key": "GB-182",
+    "slug": "one-spool-file-three-record-shapes-storypole-writes-a-bare-trace-and-rabbet-cannot-ingest-it-fee97a",
+    "title": "One spool file, three record shapes: storypole writes a bare trace and rabbet cannot ingest it",
+    "description": "The outbox carried three shapes: storypole appended a bare trace, joiner appended an envelope, and rabbet parsed only its own. SpoolEntry/SyncStatus now live in gaugeblock-contracts, storypole writes envelopes and rewrites legacy lines in place via 'storypole spool migrate'. Live proof: 2 legacy records migrated, 4/4 records accepted by the rabbet ingest gate (0 rejected, 0 duplicate), second migrate run reports 0.",
+    "kind": "bug",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "gaugeblock-contracts",
+      "module_path": null,
+      "target_files": [
+        "common/crates/gaugeblock-contracts/src/telemetry.rs,storypole/crates/storypole-core/src/telemetry/mod.rs,joiner/crates/joiner-core/src/telemetry/sink.rs,rabbet/crates/rabbet-core/src/model.rs"
+      ],
+      "target_symbols": [
+        "gaugeblock_contracts::telemetry::AnonymizedSynthesisTrace"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [
+      "storypole verify appends a SpoolEntry and storypole spool migrate rewrites legacy bare-trace lines idempotently",
+      "A live outbox holding both storypole and joiner records clears rabbet's ingest gate with zero rejects"
+    ],
+    "plan": {
+      "summary": "One spool file, one record shape: share SpoolEntry/SyncStatus, write envelopes, migrate legacy lines, prove both writers ingest",
+      "design_markdown": "# Task Plan: GB-182 — One spool file, one record shape\n\n> **Key:** `GB-182` **Scope:** `common/crates/gaugeblock-contracts`, `storypole-core`, `storypole-cli`,\n> `joiner-core`, `rabbet-core` **Status:** Verified\n\n## 1. Symptom\n\nA single `<canonical .gaugeblock>/spool/outbox.jsonl` held records from two writers, and the same file\ncould not be read by one parser:\n\n| Writer | Line it appended | Readable by `rabbet`? |\n|:--|:--|:--|\n| `storypole verify` | bare `AnonymizedSynthesisTrace` | no - no envelope, no hash |\n| `joiner fill` | `{\"trace\":…,\"content_hash\":…,\"sync_status\":…,\"recorded_at_ms\":…}` | yes |\n| `rabbet` model | its own `SpoolEntry` with `sync_status: String` | accepted any status verbatim |\n\nThe live outbox at `GB-179` close-out held exactly this mix: 2 bare traces (GB-165, GB-167) and 2\n`joiner` envelopes.\n\n## 2. Decisions\n\n1. **One owner.** `SpoolEntry` and `SyncStatus` move to `gaugeblock-contracts`, beside the trace they\n   wrap. Everything else re-exports; no path breaks.\n2. **The envelope is the wire type.** A bare trace is not a record: a reader cannot recompute a hash\n   the writer never recorded.\n3. **One hash implementation.** `SpoolEntry::hash_trace` (SHA-256 over `serde_json` bytes, lowercase\n   hex) is what writers record and what the `rabbet` gate recomputes. `joiner`'s `compute_trace_hash`\n   and `rabbet`'s `compute_canonical_trace_hash` delegate to it; both keep their signature.\n4. **`sync_status` stays a snake_case string.** `pending` | `synced` | `rejected` as an enum keeps\n   today's outboxes parseable, so migration is additive rather than a rewrite of every file.\n5. **Migration is idempotent and non-destructive.** `storypole spool migrate` rewrites bare-trace\n   lines, leaves envelopes byte-for-byte, preserves unparsable lines verbatim, and writes only when\n   something changed - a second run reports 0.\n\n## 3. Steps and gates\n\n| # | Step | Gate |\n|:--|:--|:--|\n| 3.1 | `gaugeblock-contracts`: own `SpoolEntry`/`SyncStatus` + `from_trace`/`hash_trace` | `cargo nextest -p gaugeblock-contracts` |\n| 3.2 | `storypole-core`: write envelopes, add `migrate_spool`/`normalize_spool_text` | `cargo nextest -p storypole-core` |\n| 3.3 | `storypole-cli`: `spool migrate [--dry-run]`; split `args.rs` under 250 LOC | `storypole spool --help` |\n| 3.4 | `joiner-core`: re-export shared types, delegate the hash, drop `sha2` | `cargo nextest -p joiner-core` |\n| 3.5 | `rabbet-core`: consume shared types, delegate the gate hash | `cargo nextest -p rabbet-core` |\n| 3.6 | Docs: `CONTRACTS.md` §6, `common/SPEC.md`, `storypole/README.md` | `chalkline docs check` 0 drift |\n\nTier 2 for every repo: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D\nwarnings`, `cargo nextest run --workspace`, `cargo test --doc --workspace`.\n\n## 4. Evidence (run, not asserted)\n\n* Gate matrix green in `common`, `storypole`, `joiner`, `rabbet` (fmt/clippy/nextest/doc all exit 0).\n* `storypole spool migrate --dry-run` -> `2 legacy record(s) would be rewritten`; `migrate` -> `2`\n  rewritten; second run -> `no legacy records to migrate (already canonical)`.\n* Both `joiner` envelopes kept their hashes across the migration (`e9750e36…`, `b2f96682…`).\n* Ingest proof over the live outbox via `POST /api/v1/traces` on `rabbet serve`:\n  `{\"accepted\":5,\"duplicates\":0,\"rejected\":0}` - 4 migrated/legacy records plus the GB-182 trace\n  `storypole verify` wrote through the new envelope writer.\n\n## 5. Deferred, not fixed here\n\n* `benchwork` owns a third writer path; it now builds against the shared type but has no\n  outbox-migration verb of its own.\n* Outbox compaction (rewriting `sync_status` in place) is still `joiner mark_synced` only.\n",
+      "steps": [
+        {
+          "step_id": "3.1",
+          "title": "gaugeblock-contracts owns SpoolEntry/SyncStatus",
+          "target_files": [],
+          "verification_gate": "nextest -p gaugeblock-contracts",
+          "completed": false
+        },
+        {
+          "step_id": "3.2",
+          "title": "storypole writes envelopes, migrates legacy lines",
+          "target_files": [],
+          "verification_gate": "nextest -p storypole-core",
+          "completed": false
+        },
+        {
+          "step_id": "3.3",
+          "title": "storypole spool migrate verb + args split",
+          "target_files": [],
+          "verification_gate": "storypole spool --help",
+          "completed": false
+        },
+        {
+          "step_id": "3.4",
+          "title": "joiner re-exports and delegates the hash",
+          "target_files": [],
+          "verification_gate": "nextest -p joiner-core",
+          "completed": false
+        },
+        {
+          "step_id": "3.5",
+          "title": "rabbet consumes shared types and hash",
+          "target_files": [],
+          "verification_gate": "nextest -p rabbet-core",
+          "completed": false
+        },
+        {
+          "step_id": "3.6",
+          "title": "CONTRACTS/SPEC/README updated",
+          "target_files": [],
+          "verification_gate": "chalkline docs check",
+          "completed": false
+        }
+      ],
+      "plan_file_path": ".gaugeblock/storypole/plans/GB-182.md",
+      "updated_at_epoch_ms": 1793304666141
+    },
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "cargo-nextest+tier2-gate",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "fmt/clippy/nextest/doc green in common, storypole, joiner and rabbet; 2 live legacy records migrated; 4/4 outbox records accepted by the rabbet ingest gate",
+      "verified_at_epoch_ms": 1793304606856,
+      "git_branch": "feat/gb-182-unified-spool-entry",
+      "base_commit_sha": "1efb6a599d78e33468a506c4846f03eee333198d",
+      "head_commit_sha": "c0397da37d70bec6fa4a476a35008131a3e12581",
+      "commit_shas": [
+        "c0397da37d70bec6fa4a476a35008131a3e12581"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793302180730,
+    "updated_at_epoch_ms": 1794038015092,
+    "archived_at_epoch_ms": 1794038015092
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+        "ticket_key": "GB-182",
+        "slug": "one-spool-file-three-record-shapes-storypole-writes-a-bare-trace-and-rabbet-cannot-ingest-it-fee97a",
+        "title": "One spool file, three record shapes: storypole writes a bare trace and rabbet cannot ingest it",
+        "description": "Caught by the first live use of joiner fill, which wrote to the same outbox storypole writes to. The file now holds two lines with different shapes: storypole appends a bare AnonymizedSynthesisTrace, while joiner appends a SpoolEntry wrapper of {trace, content_hash, sync_status, recorded_at_ms}. rabbet ingests Vec<SpoolEntry>, so storypole traces are not ingestible, and rabbet defines its own SpoolEntry with sync_status as String where joiner uses the SyncStatus enum - three shapes for one file. Fix: move SpoolEntry and SyncStatus into gaugeblock-contracts as the spool wire format, have all three crates re-export them, and give storypole the sha2 dependency it needs to compute content_hash over the canonical trace JSON. Then any writer produces records rabbet can mine, which is the premise of GB-166 backfill. Acceptance: verifying a task and running joiner fill append two records that both deserialize as contracts SpoolEntry and pass rabbet ingestion.",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "gaugeblock-contracts",
+          "module_path": null,
+          "target_files": [
+            "common/crates/gaugeblock-contracts/src/telemetry.rs,storypole/crates/storypole-core/src/telemetry/mod.rs,joiner/crates/joiner-core/src/telemetry/sink.rs,rabbet/crates/rabbet-core/src/model.rs"
+          ],
+          "target_symbols": [
+            "gaugeblock_contracts::telemetry::AnonymizedSynthesisTrace"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793302180730,
+        "updated_at_epoch_ms": 1793302180730
+      },
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793304594851,
+        "lease_expires_at_epoch_ms": 1793308194851,
+        "git_branch": "feat/gb-182-unified-spool-entry",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793304594851
+    },
+    {
+      "event": "task_updated",
+      "task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "title": null,
+      "description": "The outbox carried three shapes: storypole appended a bare trace, joiner appended an envelope, and rabbet parsed only its own. SpoolEntry/SyncStatus now live in gaugeblock-contracts, storypole writes envelopes and rewrites legacy lines in place via 'storypole spool migrate'. Live proof: 2 legacy records migrated, 4/4 records accepted by the rabbet ingest gate (0 rejected, 0 duplicate), second migrate run reports 0.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "storypole verify appends a SpoolEntry and storypole spool migrate rewrites legacy bare-trace lines idempotently",
+        "A live outbox holding both storypole and joiner records clears rabbet's ingest gate with zero rejects"
+      ],
+      "timestamp_ms": 1793304602232
+    },
+    {
+      "event": "task_verified",
+      "task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "receipt": {
+        "verifier": "cargo-nextest+tier2-gate",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "fmt/clippy/nextest/doc green in common, storypole, joiner and rabbet; 2 live legacy records migrated; 4/4 outbox records accepted by the rabbet ingest gate",
+        "verified_at_epoch_ms": 1793304606856,
+        "git_branch": "feat/gb-182-unified-spool-entry",
+        "base_commit_sha": "1efb6a599d78e33468a506c4846f03eee333198d",
+        "head_commit_sha": "c0397da37d70bec6fa4a476a35008131a3e12581",
+        "commit_shas": [
+          "c0397da37d70bec6fa4a476a35008131a3e12581"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "plan_updated",
+      "task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "plan": {
+        "summary": "One spool file, one record shape: share SpoolEntry/SyncStatus, write envelopes, migrate legacy lines, prove both writers ingest",
+        "design_markdown": "# Task Plan: GB-182 — One spool file, one record shape\n\n> **Key:** `GB-182` **Scope:** `common/crates/gaugeblock-contracts`, `storypole-core`, `storypole-cli`,\n> `joiner-core`, `rabbet-core` **Status:** Verified\n\n## 1. Symptom\n\nA single `<canonical .gaugeblock>/spool/outbox.jsonl` held records from two writers, and the same file\ncould not be read by one parser:\n\n| Writer | Line it appended | Readable by `rabbet`? |\n|:--|:--|:--|\n| `storypole verify` | bare `AnonymizedSynthesisTrace` | no - no envelope, no hash |\n| `joiner fill` | `{\"trace\":…,\"content_hash\":…,\"sync_status\":…,\"recorded_at_ms\":…}` | yes |\n| `rabbet` model | its own `SpoolEntry` with `sync_status: String` | accepted any status verbatim |\n\nThe live outbox at `GB-179` close-out held exactly this mix: 2 bare traces (GB-165, GB-167) and 2\n`joiner` envelopes.\n\n## 2. Decisions\n\n1. **One owner.** `SpoolEntry` and `SyncStatus` move to `gaugeblock-contracts`, beside the trace they\n   wrap. Everything else re-exports; no path breaks.\n2. **The envelope is the wire type.** A bare trace is not a record: a reader cannot recompute a hash\n   the writer never recorded.\n3. **One hash implementation.** `SpoolEntry::hash_trace` (SHA-256 over `serde_json` bytes, lowercase\n   hex) is what writers record and what the `rabbet` gate recomputes. `joiner`'s `compute_trace_hash`\n   and `rabbet`'s `compute_canonical_trace_hash` delegate to it; both keep their signature.\n4. **`sync_status` stays a snake_case string.** `pending` | `synced` | `rejected` as an enum keeps\n   today's outboxes parseable, so migration is additive rather than a rewrite of every file.\n5. **Migration is idempotent and non-destructive.** `storypole spool migrate` rewrites bare-trace\n   lines, leaves envelopes byte-for-byte, preserves unparsable lines verbatim, and writes only when\n   something changed - a second run reports 0.\n\n## 3. Steps and gates\n\n| # | Step | Gate |\n|:--|:--|:--|\n| 3.1 | `gaugeblock-contracts`: own `SpoolEntry`/`SyncStatus` + `from_trace`/`hash_trace` | `cargo nextest -p gaugeblock-contracts` |\n| 3.2 | `storypole-core`: write envelopes, add `migrate_spool`/`normalize_spool_text` | `cargo nextest -p storypole-core` |\n| 3.3 | `storypole-cli`: `spool migrate [--dry-run]`; split `args.rs` under 250 LOC | `storypole spool --help` |\n| 3.4 | `joiner-core`: re-export shared types, delegate the hash, drop `sha2` | `cargo nextest -p joiner-core` |\n| 3.5 | `rabbet-core`: consume shared types, delegate the gate hash | `cargo nextest -p rabbet-core` |\n| 3.6 | Docs: `CONTRACTS.md` §6, `common/SPEC.md`, `storypole/README.md` | `chalkline docs check` 0 drift |\n\nTier 2 for every repo: `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets -- -D\nwarnings`, `cargo nextest run --workspace`, `cargo test --doc --workspace`.\n\n## 4. Evidence (run, not asserted)\n\n* Gate matrix green in `common`, `storypole`, `joiner`, `rabbet` (fmt/clippy/nextest/doc all exit 0).\n* `storypole spool migrate --dry-run` -> `2 legacy record(s) would be rewritten`; `migrate` -> `2`\n  rewritten; second run -> `no legacy records to migrate (already canonical)`.\n* Both `joiner` envelopes kept their hashes across the migration (`e9750e36…`, `b2f96682…`).\n* Ingest proof over the live outbox via `POST /api/v1/traces` on `rabbet serve`:\n  `{\"accepted\":5,\"duplicates\":0,\"rejected\":0}` - 4 migrated/legacy records plus the GB-182 trace\n  `storypole verify` wrote through the new envelope writer.\n\n## 5. Deferred, not fixed here\n\n* `benchwork` owns a third writer path; it now builds against the shared type but has no\n  outbox-migration verb of its own.\n* Outbox compaction (rewriting `sync_status` in place) is still `joiner mark_synced` only.\n",
+        "steps": [
+          {
+            "step_id": "3.1",
+            "title": "gaugeblock-contracts owns SpoolEntry/SyncStatus",
+            "target_files": [],
+            "verification_gate": "nextest -p gaugeblock-contracts",
+            "completed": false
+          },
+          {
+            "step_id": "3.2",
+            "title": "storypole writes envelopes, migrates legacy lines",
+            "target_files": [],
+            "verification_gate": "nextest -p storypole-core",
+            "completed": false
+          },
+          {
+            "step_id": "3.3",
+            "title": "storypole spool migrate verb + args split",
+            "target_files": [],
+            "verification_gate": "storypole spool --help",
+            "completed": false
+          },
+          {
+            "step_id": "3.4",
+            "title": "joiner re-exports and delegates the hash",
+            "target_files": [],
+            "verification_gate": "nextest -p joiner-core",
+            "completed": false
+          },
+          {
+            "step_id": "3.5",
+            "title": "rabbet consumes shared types and hash",
+            "target_files": [],
+            "verification_gate": "nextest -p rabbet-core",
+            "completed": false
+          },
+          {
+            "step_id": "3.6",
+            "title": "CONTRACTS/SPEC/README updated",
+            "target_files": [],
+            "verification_gate": "chalkline docs check",
+            "completed": false
+          }
+        ],
+        "plan_file_path": ".gaugeblock/storypole/plans/GB-182.md",
+        "updated_at_epoch_ms": 1793304666141
+      },
+      "timestamp_ms": 1793304666141
+    },
+    {
+      "event": "status_changed",
+      "task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793953249041
+    },
+    {
+      "event": "task_archived",
+      "task_id": "fee97a96-45a7-4c0f-ad98-a098e5a00e6d",
+      "status": "verified",
+      "timestamp_ms": 1794038015092
+    }
+  ]
+}

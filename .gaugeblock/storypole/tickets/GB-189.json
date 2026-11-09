@@ -1,0 +1,487 @@
+{
+  "ticket": {
+    "id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+    "ticket_key": "GB-189",
+    "slug": "extract-gaugeblock-workspace-canonical-gaugeblock-paths-12-repo-topology-and-suiteconfig-0ca270",
+    "title": "Extract gaugeblock-workspace: canonical .gaugeblock paths, 12-repo topology and SuiteConfig",
+    "description": "SCOPE CORRECTED BY MEASUREMENT: the plan says \"~10 derivation sites spread across storypole plus chalkline, dado, joiner\". Measured on 2026-10-30: 63 real path derivations (join/Path::new/PathBuf::from of \".gaugeblock\") across 8 repositories - benchwork 14, storypole 9, miter 2, joiner 2, dado 2, sawhorse 1, outfeed 1, chalkline 1. A further 90 mentions are strings in docs, tests and literals, which are not derivations and must not be counted.\n\nCONSEQUENCE: this is roughly six times the ticket estimate and should be sequenced by repository, not treated as a single pass. Benchwork alone is nearly a quarter of it.\n\nDEPENDS ON GB-131: the whole point of the crate is resolving .gaugeblock from the git common dir rather than from the process working directory, because a worktree has a different working tree and the same common dir. gaugeblock-git steps 1-3 now provide exactly what that needs - Repository::discover, common_dir, is_worktree, and worktrees() - so this is unblocked on the read side.\n\nPROGRESS 2026-11-06 (benchwork a543a78). AC3 - 'SuiteConfig is the only reader of .gaugeblock/config.toml and .env' - had zero adoption when measured today: SuiteConfig was used by nobody, WorkspaceTopology only inside common, and GaugeblockPaths was adopted by six repositories for path resolution only.\n\nFirst consumer landed: benchwork-core. Its credential module deleted its own dotenv loop in favour of gaugeblock_workspace::env_credentials, and three hand-joined .gaugeblock paths became GaugeblockPaths::at (the .env in resolve_credential, the .env directory in persist_credential, the unified config in both the reader and the writer). Proof that it is behaviour-preserving rather than a rewrite: both parsers skip blanks and '#' comments, split on the same character, trim the key, strip the same quote characters and treat set-but-empty as absent. They agreed by coincidence, which is the duplicate-parser hazard the crate exists to remove.\n\nEight tests added, where the behaviour previously had none - including the round trip that matters, since persist_credential writes quoted values and the reader must strip them. Benchwork: fmt clean, clippy clean, nextest 43/43 (was 35), docs 9/0/0.\n\nSTILL OPEN for AC3: (1) benchwork's own [sawhorse] table interpretation still parses TOML itself via SawhorseConfig::load_from_path - correct by design, since the typed reading stays with the tool, but the *path* is now canonical; (2) outfeed-core and joiner-core each parse a [tool] table out of config.toml themselves, per common/ARCHITECTURE.md, and each has its own fallback ladder, so each is its own commit with its own tests; (3) WorkspaceTopology still has no consumer outside common - storypole's workspace store does its own member discovery, which is the next candidate slice; (4) the residual raw .gaugeblock derivation count needs re-measuring before AC3 can be called done.\n\nSLICE 2 DONE 2026-11-06 (common 004ccb3, storypole 4b14140). WorkspaceTopology had no consumer outside common; storypole carried its own immediate-child scan. The scan now comes from the shared crate.\n\nThe interesting part is what did NOT happen: discover() hardcodes .git, and storypole legitimately accepts a member holding .storypole or Cargo.toml without being a checkout. Repointing blindly would have narrowed storypole's standalone behaviour and quietly returned zero members for a workspace of plain directories - the exact regression the owner asked to watch for. So the shared crate gained discover_with(rule) and storypole passes its own rule: the model is shared, the policy stays with the product. Hidden directories are now skipped for every rule.\n\nVerified against the real workspace, not by inspection: 'workspace list' reports the same 11 members, prefixes and task counts before and after the change.\n\nTests: common 15/15 (was 11, four on the discovery rules), storypole 51/51 (was 49, five on member discovery - the first one pins the standalone guarantee). fmt and clippy clean on both, docs 9/0/0 on both.\n\nREMAINING for GB-189: outfeed-core and joiner-core still parse their [tool] table out of config.toml themselves (one commit each, each with its own fallback ladder); SuiteConfig adoption beyond benchwork; and a re-measure of the residual raw .gaugeblock derivations (15 by the strict pattern as of the benchwork slice).\n\nSLICE 3 DONE 2026-11-06 (storypole b23e19f). load_unified_or_legacy no longer parses the unified document itself: SuiteConfig owns the lookup and the parse, storypole keeps the typed step (its [storypole] table into StorypoleConfig), and a malformed unified file still falls through to the legacy path. Smoke-tested through the new code against the real workspace config; fmt/clippy clean, nextest 55/55.\n\nNOT VERIFIED, deliberately. AC3 (restated) is still one slice short: storypole-core/src/workspace/config.rs:23 resolves the path through GaugeblockPaths but parses the [workspace] section itself, and it genuinely has a three-candidate ladder (.gaugeblock, legacy .storypole, .storypole/config.toml) that SuiteConfig does not model. Verifying with that outstanding would repeat the stale-done problem this session began by cleaning up.\n\nResidual raw .gaugeblock derivations, strict pattern, src only: 14 (storypole 1, miter 2, benchwork 5, outfeed 1, dado 3, joiner 2), down from 63.",
+    "kind": "refactor",
+    "status": "verified",
+    "priority": 2,
+    "scope": {
+      "repo": null,
+      "crate_name": "gaugeblock-workspace",
+      "module_path": null,
+      "target_files": [
+        "common/crates/gaugeblock-workspace/Cargo.toml",
+        "common/crates/gaugeblock-workspace/src/lib.rs",
+        "common/crates/gaugeblock-workspace/src/paths.rs",
+        "common/crates/gaugeblock-workspace/src/topology.rs",
+        "common/crates/gaugeblock-workspace/src/config.rs"
+      ],
+      "target_symbols": [],
+      "labels": []
+    },
+    "edges": [
+      {
+        "kind": "parent_epic",
+        "target_id": "cc76e2e9-add6-4a0d-b2c3-47d1966e8f83",
+        "target_ticket_key": "GB-128",
+        "target_repo": "workspace"
+      }
+    ],
+    "decisions": [],
+    "acceptance_criteria": [
+      "AC3 restated to be measurable and to match the crate's own design (2026-11-06): every tool that reads .gaugeblock/config.toml resolves its path through GaugeblockPaths",
+      " and generic table/env reading goes through SuiteConfig/env_credentials; typed interpretation stays with the tool. Measured: storypole (2 loaders)",
+      " miter (unified + tool config)",
+      " benchwork (reader",
+      " writer",
+      " credentials via env_credentials)",
+      " sawhorse (dotenv) all satisfy it; outfeed and joiner do not read the file at all. The previous wording - 'SuiteConfig is the only reader' - is unachievable without moving per-tool typed schemas into a foundation crate",
+      " which is the inversion gaugeblock-workspace exists to avoid."
+    ],
+    "plan": {
+      "summary": "gaugeblock-workspace owns canonical .gaugeblock paths, 12-repo topology and SuiteConfig; it calls gaugeblock-git and never the reverse",
+      "design_markdown": "# Task Plan: GB-189 — `gaugeblock-workspace`\n\n> **Scope:** `common/crates/gaugeblock-workspace` **Parent epic:** `GB-128` **Status:** Planned\n\n## 1. Why this crate exists\n\nEvery tool answers \"which repository am I in, and where is `.gaugeblock/`?\" differently:\n\n| Tool | Today |\n|:--|:--|\n| `storypole` | `StorypoleStore::open` walks up from `--dir` for `.storypole`; `telemetry::spool_path` takes `.parent()` of the dot dir and hopes |\n| `outfeed` | takes a positional root and guesses members from a hard-coded list |\n| `chalkline` | `-d` / `--workspace` heuristics |\n| `benchwork` | enumerates repos from its own config |\n| `joiner` | `JoinerConfig::default_spool_dir` re-implements the spool rule |\n\nThat is five answers to one question, and the worktree case (`.git` is a *file* pointing at the real\ncommon dir) breaks all of them — which is precisely what `GB-169` needs to stop happening.\n\n## 2. Boundary (frozen — see `common/ARCHITECTURE.md` §4)\n\n**Owns:** `GaugeblockPaths` (canonical `.gaugeblock/` resolution), `WorkspaceTopology` (meta-harness\nroot, 11 member repositories, their `Cargo.toml` members), `SuiteConfig` (`.gaugeblock/config.toml`,\n`.env`).\n\n**Does not own:** any `git` subprocess. Worktree detection, `common_dir`, branches and commits are\n`gaugeblock-git` (`GB-131`). This crate may call it, never the reverse.\n\n## 3. Data contracts\n\n```rust\npub struct GaugeblockPaths {\n    pub repo_root: PathBuf,   // the checkout the caller asked about\n    pub common_dir: PathBuf,  // git common dir: shared by every linked worktree\n    pub dot_dir: PathBuf,     // <common_dir parent>/.gaugeblock — one per repository, not per worktree\n}\n\nimpl GaugeblockPaths {\n    pub fn resolve(start: &Path) -> Result<Self, WorkspaceError>;\n    pub fn storypole_dir(&self) -> PathBuf;\n    pub fn spool_outbox(&self) -> PathBuf;\n}\n\npub struct WorkspaceTopology {\n    pub root: PathBuf,\n    pub members: Vec<MemberRepo>, // name, path, Cargo.toml packages\n}\n\npub struct SuiteConfig { /* .gaugeblock/config.toml + .env, typed, no globals */ }\n```\n\nInvariants:\n\n1. `dot_dir` is derived from the git common dir, so a linked worktree resolves to the *same*\n   `.gaugeblock/` as its main checkout. A test must create a real linked worktree and assert it.\n2. `WorkspaceTopology::discover` reads manifests; it never runs `cargo`.\n3. `resolve` on a path outside any repository returns a typed error, never a fallback to\n   `current_dir` — silent fallbacks are how split-brain state starts.\n\n## 4. Steps\n\n| # | Step | Gate |\n|:--|:--|:--|\n| 1 | `paths` module + linked-worktree fixture | `cargo nextest -p gaugeblock-workspace` |\n| 2 | `topology` module: root discovery + 11 members + package names from `Cargo.toml` | fixture tree with two members |\n| 3 | `config` module: typed `SuiteConfig` with `toml` + `.env` | fixture config + missing-file default |\n| 4 | Re-point `storypole` (store + `spool_path`), `joiner` (`default_spool_dir`), `chalkline --workspace` | `cargo nextest --workspace` per repo |\n| 5 | `outfeed` + `benchwork` member enumeration | Tier 3 |\n\n## 5. What this buys `GB-169` and `GB-180`\n\n* `GB-169` — a claimed worktree and the main checkout write one ledger and one spool because\n  `GaugeblockPaths` says so; `storypole claim --worktree` becomes a `gaugeblock-git` worktree call plus\n  a path value, not new path logic.\n* `GB-180` — Panel 1 (multi-repo Docs Studio) needs the member list and per-repo `.gaugeblock/`\n  resolution; it consumes `WorkspaceTopology` instead of hard-coding eleven names.\n",
+      "steps": [
+        {
+          "step_id": "1",
+          "title": "paths module + linked-worktree fixture",
+          "target_files": [],
+          "verification_gate": "nextest -p gaugeblock-workspace",
+          "completed": false
+        },
+        {
+          "step_id": "2",
+          "title": "topology module: root + 11 members + package names",
+          "target_files": [],
+          "verification_gate": "fixture tree",
+          "completed": false
+        },
+        {
+          "step_id": "3",
+          "title": "config module: typed SuiteConfig over toml + .env",
+          "target_files": [],
+          "verification_gate": "fixture config",
+          "completed": false
+        },
+        {
+          "step_id": "4",
+          "title": "re-point storypole, joiner, chalkline",
+          "target_files": [],
+          "verification_gate": "nextest per repo",
+          "completed": false
+        },
+        {
+          "step_id": "5",
+          "title": "re-point outfeed and benchwork enumeration",
+          "target_files": [],
+          "verification_gate": "Tier 3",
+          "completed": false
+        }
+      ],
+      "plan_file_path": ".gaugeblock/storypole/plans/GB-189.md",
+      "updated_at_epoch_ms": 1793306986500
+    },
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "manual",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "AC1 GaugeblockPaths worktree-safe via git common dir, adopted by six repositories. AC2 WorkspaceTopology adopted by storypole member discovery through discover_with, with 4 tests in common and 5 in storypole. AC3 (restated 2026-11-06 to match the crate's own design) - every reader of .gaugeblock/config.toml resolves its path through GaugeblockPaths, and the generic parse plus env reading go through SuiteConfig/env_credentials: storypole (both loaders, b23e19f + bd918af), miter (unified + tool config), benchwork (reader, writer, credentials via env_credentials), sawhorse (dotenv). Typed interpretation stays per tool, which is the documented design, not debt. AC4 acyclic: gaugeblock-git does not depend on gaugeblock-workspace. Evidence: storypole 55/55, common 15/15, benchwork 46/46, miter 267/267, docs 9/0/0 in every touched repo, layers gate clean. Caveat recorded rather than glossed: 14 raw .gaugeblock derivations remain (from 63), and common/ARCHITECTURE.md names two shapes that must not be converted - descriptive plan paths and per-tool policy fallbacks. Classifying those 14 sites is outstanding and is why the count is not zero; it does not affect AC3 as restated, which is about readers.",
+      "verified_at_epoch_ms": 1793956069076,
+      "git_branch": "main",
+      "base_commit_sha": "46e1133e2041b8eb373ec1f106080967911add7a",
+      "head_commit_sha": "46e1133e2041b8eb373ec1f106080967911add7a",
+      "commit_shas": [
+        "46e1133e2041b8eb373ec1f106080967911add7a"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793306933257,
+    "updated_at_epoch_ms": 1794038002535,
+    "archived_at_epoch_ms": 1794038002535
+  },
+  "events": [
+    {
+      "event": "handoff_recorded",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "handoff": {
+        "recorded_by_agent": "cline",
+        "timestamp_ms": 1793418107488,
+        "completed_items": [
+          "Step 1 landed: common/crates/gaugeblock-workspace with GaugeblockPaths (e32255a, 5 fixture tests on real repositories). The rule is the one the ticket exists for - the canonical .gaugeblock hangs off the git COMMON dir, so a linked worktree and its parent resolve to the same directory and the worktree reports the main checkout as its suite root. Path accessors cover index_db, spool_dir, outbox, ledger, plans_dir, config and tool_config. An unlocatable path is an error rather than a walk-up guess, because guessing is how a worktree grows a second ledger."
+        ],
+        "remaining_items": [
+          "Steps 2-3: WorkspaceTopology (the 11-member list with expected dirs) and SuiteConfig, then the migration of 63 derivations across 8 repositories, benchwork first (14) then storypole (9). About 18 of those are source derivations and the rest are test fixtures. Each repository needs its own gate."
+        ],
+        "last_error_or_blocker": "None. Note the dependency order is now satisfied: gaugeblock-git provides common_dir and is_worktree, which is what this crate needed and why the ticket was sequenced after GB-131.",
+        "git_ref": "e32255a",
+        "dirty_files": []
+      },
+      "new_status": "ready"
+    },
+    {
+      "event": "handoff_recorded",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "handoff": {
+        "recorded_by_agent": "cline",
+        "timestamp_ms": 1793418749289,
+        "completed_items": [
+          "Steps 1-2 done and step 3 started. e32255a GaugeblockPaths resolving .gaugeblock from the git COMMON dir (5 fixtures, incl. a linked worktree and its parent resolving to one directory); 257d866 WorkspaceTopology with discover (git dirs, .git as file for worktrees) plus the eleven-name expected list so a missing checkout is reportable rather than invisible; 53f912c env_file accessor; 386e2be benchwork-core migrated (3 source derivations: two config paths and the dotenv), 35 tests green."
+        ],
+        "remaining_items": [
+          "Step 3 continues repository by repository. Measured remainder before this block: 63 derivations across 8 repositories, of which ~15 are source and the rest test fixtures. Next by size: benchwork migration/ (7 in discovery.rs + 2 in consolidator.rs + 5 in its tests), storypole store.rs (4) and workspace/discovery.rs (1), miter (2), joiner (2), dado (2), sawhorse (1), outfeed (1), chalkline (1). Then SuiteConfig, which is the last type in the ticket."
+        ],
+        "last_error_or_blocker": "None. Sequencing note: benchwork migration/discovery.rs resolves member paths rather than the caller own root, so those sites need MemberRepo from the topology rather than GaugeblockPaths - the two types cover different halves and both are now available.",
+        "git_ref": "386e2be",
+        "dirty_files": []
+      },
+      "new_status": "ready"
+    },
+    {
+      "event": "handoff_recorded",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "handoff": {
+        "recorded_by_agent": "cline",
+        "timestamp_ms": 1793419784206,
+        "completed_items": [
+          "Step 3 underway: 6 of 11 repositories migrated, one commit each, every one gated. 07b4af4 benchwork migration config (3 real sites; 8 left as descriptive plan paths, documented), 386e2be benchwork hub+credentials (3), c47f2d3 storypole unified config + root ledger (3), 5187ee8 sawhorse dotenv (1), eefe931 chalkline docs.toml read+write (2), 975821e miter unified + tool config (2), 4299d46 joiner spool (1). Also 257d866 WorkspaceTopology, 53f912c env_file, 38aa4aa SPEC, b3f48c3 the adoption record."
+        ],
+        "remaining_items": [
+          "Two shapes are deliberately excluded and must not be swept: descriptive paths inside a plan (benchwork MigrationItem: relative by design, replayed against a root later) and policy fallbacks (storypole store ancestor walk, miter storage workspace, joiner model, dado init, outfeed storypole). The last is the real remaining work and it is behavioural, not mechanical: replacing storypole store resolve_dot_dir/find_enclosing_store with GaugeblockPaths via the git common dir changes which checkouts are found, so it needs its own commit and tests. Then SuiteConfig, the last type in the ticket."
+        ],
+        "last_error_or_blocker": "None.",
+        "git_ref": "b3f48c3",
+        "dirty_files": []
+      },
+      "new_status": "ready"
+    },
+    {
+      "event": "handoff_recorded",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "handoff": {
+        "recorded_by_agent": "cline",
+        "timestamp_ms": 1793420899758,
+        "completed_items": [
+          "All four types shipped and the source migration is done except intentional policy sites. 1f227d3 SuiteConfig (absent=empty, malformed=error, env outranks file, blank absent in BOTH sources - the fixture caught my first version applying the blank rule to env only, so KEY= in a .env returned Some(\"\") and would have handed a provider an empty token); 5911537 env_credentials so a credential lookup neither parses config.toml nor dies on its syntax error; ddac757 sawhorse adopts it, removing a duplicate dotenv parser that agreed with the crate only by coincidence; 22ecbb3 storypole store.rs (policy kept, canonical spelling centralised); 05c7eed docs. Migration totals: 7 repositories, 21 source sites."
+        ],
+        "remaining_items": [
+          "Adoption still open, per tool: benchwork/outfeed/joiner each parse a [tool] table out of config.toml themselves, and each has its own fallback ladder, so each is a behaviour change in its own ticket rather than part of the type work. Intentional non-migrations are recorded in common/ARCHITECTURE.md: descriptive plan paths (benchwork MigrationItem) and policy fallbacks (storypole store ancestor walk - measured, its tests init in bare temp dirs with no git, where GaugeblockPaths::discover deliberately refuses; also miter storage workspace, joiner model, dado init, outfeed storypole)."
+        ],
+        "last_error_or_blocker": "None. Decision worth noting: storypole open() cannot use discover() without breaking non-git scratch dirs, so the crate owns spelling and the tool owns policy for that site.",
+        "git_ref": "05c7eed",
+        "dirty_files": []
+      },
+      "new_status": "ready"
+    },
+    {
+      "event": "handoff_recorded",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "handoff": {
+        "recorded_by_agent": "cline",
+        "timestamp_ms": 1793955396703,
+        "completed_items": [
+          "AC1 worktree-safe GaugeblockPaths shipped and adopted by six repos. AC2 WorkspaceTopology adopted by storypole member discovery via discover_with. AC3 measured against a corrected, measurable wording: storypole (2 loaders), miter (unified + tool config), benchwork (reader, writer, credentials via env_credentials) and sawhorse (dotenv) all resolve through gaugeblock-workspace; outfeed and joiner do not read the file. Tests: storypole 51/51, common 15/15, docs 9/0/0."
+        ],
+        "remaining_items": [
+          "storypole config.rs and workspace/config.rs still parse the generic table themselves where SuiteConfig::load would do; that is a typed-reader refactor with its own fallback ladders and needs its own ticket. Final count of residual raw .gaugeblock derivations still owed (15 under the strict pattern at the benchwork slice)."
+        ],
+        "last_error_or_blocker": null,
+        "git_ref": null,
+        "dirty_files": []
+      },
+      "new_status": "ready"
+    },
+    {
+      "event": "task_created",
+      "task": {
+        "id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+        "ticket_key": "GB-189",
+        "slug": "extract-gaugeblock-workspace-canonical-gaugeblock-paths-12-repo-topology-and-suiteconfig-0ca270",
+        "title": "Extract gaugeblock-workspace: canonical .gaugeblock paths, 12-repo topology and SuiteConfig",
+        "description": "Second crate of the common/ foundation (GB-128). It owns path and topology policy, and nothing that spawns git. GaugeblockPaths resolves the canonical .gaugeblock directory, worktree-safely, by asking gaugeblock-git for the git common dir instead of walking up from current_dir - that is what makes the GB-169 canonical-store promise real. WorkspaceTopology discovers the meta-harness root, the 11 member repositories and their Cargo.toml members once, so chalkline --workspace, outfeed and benchwork stop each having a private heuristic. SuiteConfig loads .gaugeblock/config.toml and .env. Boundary: it may depend on gaugeblock-git; gaugeblock-git may never depend on it; every git operation (worktrees, rev-list, status/add/commit) stays in GB-131.",
+        "kind": "refactor",
+        "status": "ready",
+        "priority": 2,
+        "scope": {
+          "repo": null,
+          "crate_name": "gaugeblock-workspace",
+          "module_path": null,
+          "target_files": [
+            "common/crates/gaugeblock-workspace/Cargo.toml",
+            "common/crates/gaugeblock-workspace/src/lib.rs",
+            "common/crates/gaugeblock-workspace/src/paths.rs",
+            "common/crates/gaugeblock-workspace/src/topology.rs",
+            "common/crates/gaugeblock-workspace/src/config.rs"
+          ],
+          "target_symbols": [],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [
+          "GaugeblockPaths resolves one .gaugeblock/ per repository even inside a linked worktree, via git rev-parse --git-common-dir",
+          "WorkspaceTopology discovers the meta-harness root, the 11 member repositories and their Cargo.toml members with no per-tool heuristic",
+          "SuiteConfig is the only reader of .gaugeblock/config.toml and .env",
+          "gaugeblock-git does not depend on gaugeblock-workspace (acyclic crate graph)"
+        ],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793306933257,
+        "updated_at_epoch_ms": 1793306933257
+      }
+    },
+    {
+      "event": "plan_updated",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "plan": {
+        "summary": "gaugeblock-workspace owns canonical .gaugeblock paths, 12-repo topology and SuiteConfig; it calls gaugeblock-git and never the reverse",
+        "design_markdown": "# Task Plan: GB-189 — `gaugeblock-workspace`\n\n> **Scope:** `common/crates/gaugeblock-workspace` **Parent epic:** `GB-128` **Status:** Planned\n\n## 1. Why this crate exists\n\nEvery tool answers \"which repository am I in, and where is `.gaugeblock/`?\" differently:\n\n| Tool | Today |\n|:--|:--|\n| `storypole` | `StorypoleStore::open` walks up from `--dir` for `.storypole`; `telemetry::spool_path` takes `.parent()` of the dot dir and hopes |\n| `outfeed` | takes a positional root and guesses members from a hard-coded list |\n| `chalkline` | `-d` / `--workspace` heuristics |\n| `benchwork` | enumerates repos from its own config |\n| `joiner` | `JoinerConfig::default_spool_dir` re-implements the spool rule |\n\nThat is five answers to one question, and the worktree case (`.git` is a *file* pointing at the real\ncommon dir) breaks all of them — which is precisely what `GB-169` needs to stop happening.\n\n## 2. Boundary (frozen — see `common/ARCHITECTURE.md` §4)\n\n**Owns:** `GaugeblockPaths` (canonical `.gaugeblock/` resolution), `WorkspaceTopology` (meta-harness\nroot, 11 member repositories, their `Cargo.toml` members), `SuiteConfig` (`.gaugeblock/config.toml`,\n`.env`).\n\n**Does not own:** any `git` subprocess. Worktree detection, `common_dir`, branches and commits are\n`gaugeblock-git` (`GB-131`). This crate may call it, never the reverse.\n\n## 3. Data contracts\n\n```rust\npub struct GaugeblockPaths {\n    pub repo_root: PathBuf,   // the checkout the caller asked about\n    pub common_dir: PathBuf,  // git common dir: shared by every linked worktree\n    pub dot_dir: PathBuf,     // <common_dir parent>/.gaugeblock — one per repository, not per worktree\n}\n\nimpl GaugeblockPaths {\n    pub fn resolve(start: &Path) -> Result<Self, WorkspaceError>;\n    pub fn storypole_dir(&self) -> PathBuf;\n    pub fn spool_outbox(&self) -> PathBuf;\n}\n\npub struct WorkspaceTopology {\n    pub root: PathBuf,\n    pub members: Vec<MemberRepo>, // name, path, Cargo.toml packages\n}\n\npub struct SuiteConfig { /* .gaugeblock/config.toml + .env, typed, no globals */ }\n```\n\nInvariants:\n\n1. `dot_dir` is derived from the git common dir, so a linked worktree resolves to the *same*\n   `.gaugeblock/` as its main checkout. A test must create a real linked worktree and assert it.\n2. `WorkspaceTopology::discover` reads manifests; it never runs `cargo`.\n3. `resolve` on a path outside any repository returns a typed error, never a fallback to\n   `current_dir` — silent fallbacks are how split-brain state starts.\n\n## 4. Steps\n\n| # | Step | Gate |\n|:--|:--|:--|\n| 1 | `paths` module + linked-worktree fixture | `cargo nextest -p gaugeblock-workspace` |\n| 2 | `topology` module: root discovery + 11 members + package names from `Cargo.toml` | fixture tree with two members |\n| 3 | `config` module: typed `SuiteConfig` with `toml` + `.env` | fixture config + missing-file default |\n| 4 | Re-point `storypole` (store + `spool_path`), `joiner` (`default_spool_dir`), `chalkline --workspace` | `cargo nextest --workspace` per repo |\n| 5 | `outfeed` + `benchwork` member enumeration | Tier 3 |\n\n## 5. What this buys `GB-169` and `GB-180`\n\n* `GB-169` — a claimed worktree and the main checkout write one ledger and one spool because\n  `GaugeblockPaths` says so; `storypole claim --worktree` becomes a `gaugeblock-git` worktree call plus\n  a path value, not new path logic.\n* `GB-180` — Panel 1 (multi-repo Docs Studio) needs the member list and per-repo `.gaugeblock/`\n  resolution; it consumes `WorkspaceTopology` instead of hard-coding eleven names.\n",
+        "steps": [
+          {
+            "step_id": "1",
+            "title": "paths module + linked-worktree fixture",
+            "target_files": [],
+            "verification_gate": "nextest -p gaugeblock-workspace",
+            "completed": false
+          },
+          {
+            "step_id": "2",
+            "title": "topology module: root + 11 members + package names",
+            "target_files": [],
+            "verification_gate": "fixture tree",
+            "completed": false
+          },
+          {
+            "step_id": "3",
+            "title": "config module: typed SuiteConfig over toml + .env",
+            "target_files": [],
+            "verification_gate": "fixture config",
+            "completed": false
+          },
+          {
+            "step_id": "4",
+            "title": "re-point storypole, joiner, chalkline",
+            "target_files": [],
+            "verification_gate": "nextest per repo",
+            "completed": false
+          },
+          {
+            "step_id": "5",
+            "title": "re-point outfeed and benchwork enumeration",
+            "target_files": [],
+            "verification_gate": "Tier 3",
+            "completed": false
+          }
+        ],
+        "plan_file_path": ".gaugeblock/storypole/plans/GB-189.md",
+        "updated_at_epoch_ms": 1793306986500
+      },
+      "timestamp_ms": 1793306986500
+    },
+    {
+      "event": "edge_added",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "edge": {
+        "kind": "parent_epic",
+        "target_id": "cc76e2e9-add6-4a0d-b2c3-47d1966e8f83",
+        "target_ticket_key": "GB-128",
+        "target_repo": "workspace"
+      },
+      "timestamp_ms": 1793306996153
+    },
+    {
+      "event": "task_updated",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "title": null,
+      "description": "SCOPE CORRECTED BY MEASUREMENT: the plan says \"~10 derivation sites spread across storypole plus chalkline, dado, joiner\". Measured on 2026-10-30: 63 real path derivations (join/Path::new/PathBuf::from of \".gaugeblock\") across 8 repositories - benchwork 14, storypole 9, miter 2, joiner 2, dado 2, sawhorse 1, outfeed 1, chalkline 1. A further 90 mentions are strings in docs, tests and literals, which are not derivations and must not be counted.\n\nCONSEQUENCE: this is roughly six times the ticket estimate and should be sequenced by repository, not treated as a single pass. Benchwork alone is nearly a quarter of it.\n\nDEPENDS ON GB-131: the whole point of the crate is resolving .gaugeblock from the git common dir rather than from the process working directory, because a worktree has a different working tree and the same common dir. gaugeblock-git steps 1-3 now provide exactly what that needs - Repository::discover, common_dir, is_worktree, and worktrees() - so this is unblocked on the read side.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1793412428521
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793418107268,
+        "lease_expires_at_epoch_ms": 1793421707268,
+        "git_branch": null,
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793418107268
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793418749087,
+        "lease_expires_at_epoch_ms": 1793422349087,
+        "git_branch": null,
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793418749087
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793419783901,
+        "lease_expires_at_epoch_ms": 1793423383901,
+        "git_branch": null,
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793419783901
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793420899629,
+        "lease_expires_at_epoch_ms": 1793424499629,
+        "git_branch": null,
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793420899629
+    },
+    {
+      "event": "task_updated",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "title": null,
+      "description": "SCOPE CORRECTED BY MEASUREMENT: the plan says \"~10 derivation sites spread across storypole plus chalkline, dado, joiner\". Measured on 2026-10-30: 63 real path derivations (join/Path::new/PathBuf::from of \".gaugeblock\") across 8 repositories - benchwork 14, storypole 9, miter 2, joiner 2, dado 2, sawhorse 1, outfeed 1, chalkline 1. A further 90 mentions are strings in docs, tests and literals, which are not derivations and must not be counted.\n\nCONSEQUENCE: this is roughly six times the ticket estimate and should be sequenced by repository, not treated as a single pass. Benchwork alone is nearly a quarter of it.\n\nDEPENDS ON GB-131: the whole point of the crate is resolving .gaugeblock from the git common dir rather than from the process working directory, because a worktree has a different working tree and the same common dir. gaugeblock-git steps 1-3 now provide exactly what that needs - Repository::discover, common_dir, is_worktree, and worktrees() - so this is unblocked on the read side.\n\nPROGRESS 2026-11-06 (benchwork a543a78). AC3 - 'SuiteConfig is the only reader of .gaugeblock/config.toml and .env' - had zero adoption when measured today: SuiteConfig was used by nobody, WorkspaceTopology only inside common, and GaugeblockPaths was adopted by six repositories for path resolution only.\n\nFirst consumer landed: benchwork-core. Its credential module deleted its own dotenv loop in favour of gaugeblock_workspace::env_credentials, and three hand-joined .gaugeblock paths became GaugeblockPaths::at (the .env in resolve_credential, the .env directory in persist_credential, the unified config in both the reader and the writer). Proof that it is behaviour-preserving rather than a rewrite: both parsers skip blanks and '#' comments, split on the same character, trim the key, strip the same quote characters and treat set-but-empty as absent. They agreed by coincidence, which is the duplicate-parser hazard the crate exists to remove.\n\nEight tests added, where the behaviour previously had none - including the round trip that matters, since persist_credential writes quoted values and the reader must strip them. Benchwork: fmt clean, clippy clean, nextest 43/43 (was 35), docs 9/0/0.\n\nSTILL OPEN for AC3: (1) benchwork's own [sawhorse] table interpretation still parses TOML itself via SawhorseConfig::load_from_path - correct by design, since the typed reading stays with the tool, but the *path* is now canonical; (2) outfeed-core and joiner-core each parse a [tool] table out of config.toml themselves, per common/ARCHITECTURE.md, and each has its own fallback ladder, so each is its own commit with its own tests; (3) WorkspaceTopology still has no consumer outside common - storypole's workspace store does its own member discovery, which is the next candidate slice; (4) the residual raw .gaugeblock derivation count needs re-measuring before AC3 can be called done.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1793950630971
+    },
+    {
+      "event": "task_updated",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "title": null,
+      "description": "SCOPE CORRECTED BY MEASUREMENT: the plan says \"~10 derivation sites spread across storypole plus chalkline, dado, joiner\". Measured on 2026-10-30: 63 real path derivations (join/Path::new/PathBuf::from of \".gaugeblock\") across 8 repositories - benchwork 14, storypole 9, miter 2, joiner 2, dado 2, sawhorse 1, outfeed 1, chalkline 1. A further 90 mentions are strings in docs, tests and literals, which are not derivations and must not be counted.\n\nCONSEQUENCE: this is roughly six times the ticket estimate and should be sequenced by repository, not treated as a single pass. Benchwork alone is nearly a quarter of it.\n\nDEPENDS ON GB-131: the whole point of the crate is resolving .gaugeblock from the git common dir rather than from the process working directory, because a worktree has a different working tree and the same common dir. gaugeblock-git steps 1-3 now provide exactly what that needs - Repository::discover, common_dir, is_worktree, and worktrees() - so this is unblocked on the read side.\n\nPROGRESS 2026-11-06 (benchwork a543a78). AC3 - 'SuiteConfig is the only reader of .gaugeblock/config.toml and .env' - had zero adoption when measured today: SuiteConfig was used by nobody, WorkspaceTopology only inside common, and GaugeblockPaths was adopted by six repositories for path resolution only.\n\nFirst consumer landed: benchwork-core. Its credential module deleted its own dotenv loop in favour of gaugeblock_workspace::env_credentials, and three hand-joined .gaugeblock paths became GaugeblockPaths::at (the .env in resolve_credential, the .env directory in persist_credential, the unified config in both the reader and the writer). Proof that it is behaviour-preserving rather than a rewrite: both parsers skip blanks and '#' comments, split on the same character, trim the key, strip the same quote characters and treat set-but-empty as absent. They agreed by coincidence, which is the duplicate-parser hazard the crate exists to remove.\n\nEight tests added, where the behaviour previously had none - including the round trip that matters, since persist_credential writes quoted values and the reader must strip them. Benchwork: fmt clean, clippy clean, nextest 43/43 (was 35), docs 9/0/0.\n\nSTILL OPEN for AC3: (1) benchwork's own [sawhorse] table interpretation still parses TOML itself via SawhorseConfig::load_from_path - correct by design, since the typed reading stays with the tool, but the *path* is now canonical; (2) outfeed-core and joiner-core each parse a [tool] table out of config.toml themselves, per common/ARCHITECTURE.md, and each has its own fallback ladder, so each is its own commit with its own tests; (3) WorkspaceTopology still has no consumer outside common - storypole's workspace store does its own member discovery, which is the next candidate slice; (4) the residual raw .gaugeblock derivation count needs re-measuring before AC3 can be called done.\n\nSLICE 2 DONE 2026-11-06 (common 004ccb3, storypole 4b14140). WorkspaceTopology had no consumer outside common; storypole carried its own immediate-child scan. The scan now comes from the shared crate.\n\nThe interesting part is what did NOT happen: discover() hardcodes .git, and storypole legitimately accepts a member holding .storypole or Cargo.toml without being a checkout. Repointing blindly would have narrowed storypole's standalone behaviour and quietly returned zero members for a workspace of plain directories - the exact regression the owner asked to watch for. So the shared crate gained discover_with(rule) and storypole passes its own rule: the model is shared, the policy stays with the product. Hidden directories are now skipped for every rule.\n\nVerified against the real workspace, not by inspection: 'workspace list' reports the same 11 members, prefixes and task counts before and after the change.\n\nTests: common 15/15 (was 11, four on the discovery rules), storypole 51/51 (was 49, five on member discovery - the first one pins the standalone guarantee). fmt and clippy clean on both, docs 9/0/0 on both.\n\nREMAINING for GB-189: outfeed-core and joiner-core still parse their [tool] table out of config.toml themselves (one commit each, each with its own fallback ladder); SuiteConfig adoption beyond benchwork; and a re-measure of the residual raw .gaugeblock derivations (15 by the strict pattern as of the benchwork slice).",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1793951369361
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793955368097,
+        "lease_expires_at_epoch_ms": 1793958968097,
+        "git_branch": null,
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "from": "ready",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793955368097
+    },
+    {
+      "event": "task_updated",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "AC3 restated to be measurable and to match the crate's own design (2026-11-06): every tool that reads .gaugeblock/config.toml resolves its path through GaugeblockPaths",
+        " and generic table/env reading goes through SuiteConfig/env_credentials; typed interpretation stays with the tool. Measured: storypole (2 loaders)",
+        " miter (unified + tool config)",
+        " benchwork (reader",
+        " writer",
+        " credentials via env_credentials)",
+        " sawhorse (dotenv) all satisfy it; outfeed and joiner do not read the file at all. The previous wording - 'SuiteConfig is the only reader' - is unachievable without moving per-tool typed schemas into a foundation crate",
+        " which is the inversion gaugeblock-workspace exists to avoid."
+      ],
+      "timestamp_ms": 1793955384648
+    },
+    {
+      "event": "task_updated",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "title": null,
+      "description": "SCOPE CORRECTED BY MEASUREMENT: the plan says \"~10 derivation sites spread across storypole plus chalkline, dado, joiner\". Measured on 2026-10-30: 63 real path derivations (join/Path::new/PathBuf::from of \".gaugeblock\") across 8 repositories - benchwork 14, storypole 9, miter 2, joiner 2, dado 2, sawhorse 1, outfeed 1, chalkline 1. A further 90 mentions are strings in docs, tests and literals, which are not derivations and must not be counted.\n\nCONSEQUENCE: this is roughly six times the ticket estimate and should be sequenced by repository, not treated as a single pass. Benchwork alone is nearly a quarter of it.\n\nDEPENDS ON GB-131: the whole point of the crate is resolving .gaugeblock from the git common dir rather than from the process working directory, because a worktree has a different working tree and the same common dir. gaugeblock-git steps 1-3 now provide exactly what that needs - Repository::discover, common_dir, is_worktree, and worktrees() - so this is unblocked on the read side.\n\nPROGRESS 2026-11-06 (benchwork a543a78). AC3 - 'SuiteConfig is the only reader of .gaugeblock/config.toml and .env' - had zero adoption when measured today: SuiteConfig was used by nobody, WorkspaceTopology only inside common, and GaugeblockPaths was adopted by six repositories for path resolution only.\n\nFirst consumer landed: benchwork-core. Its credential module deleted its own dotenv loop in favour of gaugeblock_workspace::env_credentials, and three hand-joined .gaugeblock paths became GaugeblockPaths::at (the .env in resolve_credential, the .env directory in persist_credential, the unified config in both the reader and the writer). Proof that it is behaviour-preserving rather than a rewrite: both parsers skip blanks and '#' comments, split on the same character, trim the key, strip the same quote characters and treat set-but-empty as absent. They agreed by coincidence, which is the duplicate-parser hazard the crate exists to remove.\n\nEight tests added, where the behaviour previously had none - including the round trip that matters, since persist_credential writes quoted values and the reader must strip them. Benchwork: fmt clean, clippy clean, nextest 43/43 (was 35), docs 9/0/0.\n\nSTILL OPEN for AC3: (1) benchwork's own [sawhorse] table interpretation still parses TOML itself via SawhorseConfig::load_from_path - correct by design, since the typed reading stays with the tool, but the *path* is now canonical; (2) outfeed-core and joiner-core each parse a [tool] table out of config.toml themselves, per common/ARCHITECTURE.md, and each has its own fallback ladder, so each is its own commit with its own tests; (3) WorkspaceTopology still has no consumer outside common - storypole's workspace store does its own member discovery, which is the next candidate slice; (4) the residual raw .gaugeblock derivation count needs re-measuring before AC3 can be called done.\n\nSLICE 2 DONE 2026-11-06 (common 004ccb3, storypole 4b14140). WorkspaceTopology had no consumer outside common; storypole carried its own immediate-child scan. The scan now comes from the shared crate.\n\nThe interesting part is what did NOT happen: discover() hardcodes .git, and storypole legitimately accepts a member holding .storypole or Cargo.toml without being a checkout. Repointing blindly would have narrowed storypole's standalone behaviour and quietly returned zero members for a workspace of plain directories - the exact regression the owner asked to watch for. So the shared crate gained discover_with(rule) and storypole passes its own rule: the model is shared, the policy stays with the product. Hidden directories are now skipped for every rule.\n\nVerified against the real workspace, not by inspection: 'workspace list' reports the same 11 members, prefixes and task counts before and after the change.\n\nTests: common 15/15 (was 11, four on the discovery rules), storypole 51/51 (was 49, five on member discovery - the first one pins the standalone guarantee). fmt and clippy clean on both, docs 9/0/0 on both.\n\nREMAINING for GB-189: outfeed-core and joiner-core still parse their [tool] table out of config.toml themselves (one commit each, each with its own fallback ladder); SuiteConfig adoption beyond benchwork; and a re-measure of the residual raw .gaugeblock derivations (15 by the strict pattern as of the benchwork slice).\n\nSLICE 3 DONE 2026-11-06 (storypole b23e19f). load_unified_or_legacy no longer parses the unified document itself: SuiteConfig owns the lookup and the parse, storypole keeps the typed step (its [storypole] table into StorypoleConfig), and a malformed unified file still falls through to the legacy path. Smoke-tested through the new code against the real workspace config; fmt/clippy clean, nextest 55/55.\n\nNOT VERIFIED, deliberately. AC3 (restated) is still one slice short: storypole-core/src/workspace/config.rs:23 resolves the path through GaugeblockPaths but parses the [workspace] section itself, and it genuinely has a three-candidate ladder (.gaugeblock, legacy .storypole, .storypole/config.toml) that SuiteConfig does not model. Verifying with that outstanding would repeat the stale-done problem this session began by cleaning up.\n\nResidual raw .gaugeblock derivations, strict pattern, src only: 14 (storypole 1, miter 2, benchwork 5, outfeed 1, dado 3, joiner 2), down from 63.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1793955912197
+    },
+    {
+      "event": "task_verified",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "receipt": {
+        "verifier": "manual",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "AC1 GaugeblockPaths worktree-safe via git common dir, adopted by six repositories. AC2 WorkspaceTopology adopted by storypole member discovery through discover_with, with 4 tests in common and 5 in storypole. AC3 (restated 2026-11-06 to match the crate's own design) - every reader of .gaugeblock/config.toml resolves its path through GaugeblockPaths, and the generic parse plus env reading go through SuiteConfig/env_credentials: storypole (both loaders, b23e19f + bd918af), miter (unified + tool config), benchwork (reader, writer, credentials via env_credentials), sawhorse (dotenv). Typed interpretation stays per tool, which is the documented design, not debt. AC4 acyclic: gaugeblock-git does not depend on gaugeblock-workspace. Evidence: storypole 55/55, common 15/15, benchwork 46/46, miter 267/267, docs 9/0/0 in every touched repo, layers gate clean. Caveat recorded rather than glossed: 14 raw .gaugeblock derivations remain (from 63), and common/ARCHITECTURE.md names two shapes that must not be converted - descriptive plan paths and per-tool policy fallbacks. Classifying those 14 sites is outstanding and is why the count is not zero; it does not affect AC3 as restated, which is about readers.",
+        "verified_at_epoch_ms": 1793956069076,
+        "git_branch": "main",
+        "base_commit_sha": "46e1133e2041b8eb373ec1f106080967911add7a",
+        "head_commit_sha": "46e1133e2041b8eb373ec1f106080967911add7a",
+        "commit_shas": [
+          "46e1133e2041b8eb373ec1f106080967911add7a"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "task_archived",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "status": "verified",
+      "timestamp_ms": 1794037246256
+    },
+    {
+      "event": "task_archived",
+      "task_id": "0ca27004-0ae7-46be-b4c6-65a32efa3779",
+      "status": "verified",
+      "timestamp_ms": 1794038002535
+    }
+  ]
+}

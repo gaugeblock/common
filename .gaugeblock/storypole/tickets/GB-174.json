@@ -1,0 +1,140 @@
+{
+  "ticket": {
+    "id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+    "ticket_key": "GB-174",
+    "slug": "reconcile-the-three-definitions-of-the-telemetry-record-before-traces-are-written-8b9f6c",
+    "title": "Reconcile the three definitions of the telemetry record before traces are written",
+    "description": "Three definitions of the same telemetry vocabulary now coexist: sawhorse-core defines CompilerDiagnostic and VerificationReport for its inference results, joiner-core defines its own for synthesis verification, and gaugeblock-contracts now owns the canonical AnonymizedSynthesisTrace set (GB-165 slice 2). Attempting to re-export the contracts copy inside joiner collided with the sawhorse names in four files, which is the detection working: the duplicates have silently coexisted because both crates use the same field names. Decide the single home - contracts - then have sawhorse and joiner re-export it, exactly as GB-143 did for the wire types. Must land before GB-165 slice 4 writes real traces, since the hook needs one record type to write.",
+    "kind": "tech_debt",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "gaugeblock-contracts",
+      "module_path": null,
+      "target_files": [
+        "common/crates/gaugeblock-contracts/src/telemetry.rs,sawhorse/crates/sawhorse-core/src,joiner/crates/joiner-core/src/model.rs"
+      ],
+      "target_symbols": [
+        "gaugeblock_contracts::telemetry::VerificationReport"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "cline",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Closed across three repositories. contracts b025d50 adds Display for TelemetryTier rendering the snake_case wire names, and VerificationReport derives Default, both required by consumers that already relied on the local copies. joiner 9d5f83f and rabbet 10c9225 delete their own AnonymizedSynthesisTrace, TelemetryTier, CompilerDiagnostic and VerificationReport and re-export the contracts versions, so a trace spooled by joiner, captured by storypole and mined by rabbet is now one Rust type rather than three types over identical JSON. Seven construction sites across joiner spool.rs, rabbet db/queries.rs, cold_miner.rs and four test files pass the two optional provenance fields as None. Correcting an earlier claim on this ticket: sawhorse-core never defined these types - the ambiguity that blocked the first attempt came from contracts itself exporting the record twice, from miter.rs and telemetry.rs, which was fixed in 16e46ff. This unblocks GB-165 slice 4, where the verify hook needs exactly one record type to write. Gates: contracts 24/24, joiner 22/22, rabbet 7/7, all fmt clean and clippy -D warnings clean.",
+      "verified_at_epoch_ms": 1793300105062,
+      "git_branch": "main",
+      "base_commit_sha": "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90",
+      "head_commit_sha": "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90",
+      "commit_shas": [
+        "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793256626064,
+    "updated_at_epoch_ms": 1794038014019,
+    "archived_at_epoch_ms": 1794038014019
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+        "ticket_key": "GB-174",
+        "slug": "reconcile-the-three-definitions-of-the-telemetry-record-before-traces-are-written-8b9f6c",
+        "title": "Reconcile the three definitions of the telemetry record before traces are written",
+        "description": "Three definitions of the same telemetry vocabulary now coexist: sawhorse-core defines CompilerDiagnostic and VerificationReport for its inference results, joiner-core defines its own for synthesis verification, and gaugeblock-contracts now owns the canonical AnonymizedSynthesisTrace set (GB-165 slice 2). Attempting to re-export the contracts copy inside joiner collided with the sawhorse names in four files, which is the detection working: the duplicates have silently coexisted because both crates use the same field names. Decide the single home - contracts - then have sawhorse and joiner re-export it, exactly as GB-143 did for the wire types. Must land before GB-165 slice 4 writes real traces, since the hook needs one record type to write.",
+        "kind": "tech_debt",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "gaugeblock-contracts",
+          "module_path": null,
+          "target_files": [
+            "common/crates/gaugeblock-contracts/src/telemetry.rs,sawhorse/crates/sawhorse-core/src,joiner/crates/joiner-core/src/model.rs"
+          ],
+          "target_symbols": [
+            "gaugeblock_contracts::telemetry::VerificationReport"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793256626064,
+        "updated_at_epoch_ms": 1793256626064
+      },
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793299117181,
+        "lease_expires_at_epoch_ms": 1793302717181,
+        "git_branch": "feat/telemetry-record",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793299117181
+    },
+    {
+      "event": "task_verified",
+      "task_id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+      "receipt": {
+        "verifier": "cline",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Closed across three repositories. contracts b025d50 adds Display for TelemetryTier rendering the snake_case wire names, and VerificationReport derives Default, both required by consumers that already relied on the local copies. joiner 9d5f83f and rabbet 10c9225 delete their own AnonymizedSynthesisTrace, TelemetryTier, CompilerDiagnostic and VerificationReport and re-export the contracts versions, so a trace spooled by joiner, captured by storypole and mined by rabbet is now one Rust type rather than three types over identical JSON. Seven construction sites across joiner spool.rs, rabbet db/queries.rs, cold_miner.rs and four test files pass the two optional provenance fields as None. Correcting an earlier claim on this ticket: sawhorse-core never defined these types - the ambiguity that blocked the first attempt came from contracts itself exporting the record twice, from miter.rs and telemetry.rs, which was fixed in 16e46ff. This unblocks GB-165 slice 4, where the verify hook needs exactly one record type to write. Gates: contracts 24/24, joiner 22/22, rabbet 7/7, all fmt clean and clippy -D warnings clean.",
+        "verified_at_epoch_ms": 1793300105062,
+        "git_branch": "main",
+        "base_commit_sha": "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90",
+        "head_commit_sha": "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90",
+        "commit_shas": [
+          "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793953204768
+    },
+    {
+      "event": "task_archived",
+      "task_id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+      "status": "verified",
+      "timestamp_ms": 1794038014019
+    }
+  ]
+}

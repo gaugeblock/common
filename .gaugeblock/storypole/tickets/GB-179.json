@@ -1,0 +1,168 @@
+{
+  "ticket": {
+    "id": "d27c6705-2511-4cc9-9190-1687b0f38cdf",
+    "ticket_key": "GB-179",
+    "slug": "model-archived-as-a-state-orthogonal-to-status-so-archived-tasks-stay-viewable-and-filterable-d27c67",
+    "title": "Model archived as a state orthogonal to status so archived tasks stay viewable and filterable",
+    "description": "Design: archived is a state, not a status. TaskStatus::Archived (contracts task.rs:49) collapses two orthogonal dimensions into one enum, so archiving destroys the status a task actually held. Consequences seen in use: a task archived while Verified cannot be read back as Verified-and-archived; filtering by archived returns nothing because archived is no longer a status anyone filters for; Show Archived in the DagBoard toggles a separate flag rather than a status, so the two views disagree; and archiving from an arbitrary status is a question with no good answer, which is why the proposed status guard on archive_task was wrong and is withdrawn. Intended model: keep status intact and add an orthogonal archived dimension to TaskNode (archived_at: Option<u64>, serde default and skip_serializing_if so existing ledgers and JSON stay valid), replay Archived transitions as setting that field rather than overwriting status, have queries hide archived by default and include them when asked, and let any task in any status be archived. Code trail for the UI symptom: DagBoardPanel sends include_archived=true, DagQuery binds it (model/dag.rs:21), dag_service/query.rs:63 honours it, so the drop is downstream in the view or in how nodes are filtered after the query - worth confirming with a request log before changing the UI. Migration: a replay change plus a contracts field, so it lands with a version bump rather than inline.",
+    "kind": "feature",
+    "status": "verified",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": "gaugeblock-contracts",
+      "module_path": null,
+      "target_files": [
+        "common/crates/gaugeblock-contracts/src/storypole/task.rs,benchwork/crates/benchwork-core/src/dag_service/query.rs,benchwork/web/src/panels/DagBoard/DagBoardPanel.tsx"
+      ],
+      "target_symbols": [
+        "gaugeblock_contracts::storypole::TaskStatus"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [
+      "Cascade measured before starting: TaskNode has no Default derive and there are 11 literal constructions, of which only 1 uses ..Default::default(), so adding archived_at touches roughly 10 sites across four repositories - contracts 2 (tests), storypole 4 (ops/mutations, ops/graph, two tests), joiner 3 (two tests plus engine_loop), benchwork 2 (integration and archive_service tests). Plan the edits per repo and gate each, rather than one sweeping edit."
+    ],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": {
+      "verifier": "cline",
+      "command": "n/a",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "Closed across four repositories, each on feat/archived-state with the lease taken first. contracts 64ac860 adds archived_at_epoch_ms: Option<u64> to TaskNode with serde(default) and skip_serializing_if, so older ledgers still parse. storypole e3c35c4 makes replay set that timestamp instead of overwriting status - and because replay is sequential the status in hand is exactly the from field, so all 58 already-archived tasks were repaired with no migration script: verified 102 to 159 and ready 19 to 20, confirmed by ledger-verify. The index gained an archived_at column, a guarded ALTER for older files, and a replay_version in the cache key, because a replay change alters what a ledger means without touching the file. Queries hide archived by timestamp and an explicit archived status selects archived tasks. storypole 306a640 fixes unarchive, which guarded on a status that no longer occurs; leaving the archived state is now any non-archive transition. benchwork a191616 shows archived tasks by state, counts stats.archived from the timestamp and drops the status filter for that view. Final check: ledger-reconcile reports index and ledger agree, archived 58 on both sides with every status delta zero. Gates: storypole 36/36, benchwork 30/30, contracts 24/24, joiner 22/22, all clippy -D warnings clean.",
+      "verified_at_epoch_ms": 1793295618729,
+      "git_branch": "main",
+      "base_commit_sha": "92019b481c6580b467a9bbfdacfeed941fb50a30",
+      "head_commit_sha": "92019b481c6580b467a9bbfdacfeed941fb50a30",
+      "commit_shas": [
+        "92019b481c6580b467a9bbfdacfeed941fb50a30"
+      ],
+      "repo": null,
+      "chain_key": null
+    },
+    "created_at_epoch_ms": 1793291841666,
+    "updated_at_epoch_ms": 1794038014848,
+    "archived_at_epoch_ms": 1794038014848
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "d27c6705-2511-4cc9-9190-1687b0f38cdf",
+        "ticket_key": "GB-179",
+        "slug": "model-archived-as-a-state-orthogonal-to-status-so-archived-tasks-stay-viewable-and-filterable-d27c67",
+        "title": "Model archived as a state orthogonal to status so archived tasks stay viewable and filterable",
+        "description": "Design: archived is a state, not a status. TaskStatus::Archived (contracts task.rs:49) collapses two orthogonal dimensions into one enum, so archiving destroys the status a task actually held. Consequences seen in use: a task archived while Verified cannot be read back as Verified-and-archived; filtering by archived returns nothing because archived is no longer a status anyone filters for; Show Archived in the DagBoard toggles a separate flag rather than a status, so the two views disagree; and archiving from an arbitrary status is a question with no good answer, which is why the proposed status guard on archive_task was wrong and is withdrawn. Intended model: keep status intact and add an orthogonal archived dimension to TaskNode (archived_at: Option<u64>, serde default and skip_serializing_if so existing ledgers and JSON stay valid), replay Archived transitions as setting that field rather than overwriting status, have queries hide archived by default and include them when asked, and let any task in any status be archived. Code trail for the UI symptom: DagBoardPanel sends include_archived=true, DagQuery binds it (model/dag.rs:21), dag_service/query.rs:63 honours it, so the drop is downstream in the view or in how nodes are filtered after the query - worth confirming with a request log before changing the UI. Migration: a replay change plus a contracts field, so it lands with a version bump rather than inline.",
+        "kind": "feature",
+        "status": "deferred",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": "gaugeblock-contracts",
+          "module_path": null,
+          "target_files": [
+            "common/crates/gaugeblock-contracts/src/storypole/task.rs,benchwork/crates/benchwork-core/src/dag_service/query.rs,benchwork/web/src/panels/DagBoard/DagBoardPanel.tsx"
+          ],
+          "target_symbols": [
+            "gaugeblock_contracts::storypole::TaskStatus"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1793291841666,
+        "updated_at_epoch_ms": 1793291841666
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_updated",
+      "task_id": "d27c6705-2511-4cc9-9190-1687b0f38cdf",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "Repair of already-archived tasks verified: every one of the 58 archive events records a from status, distribution 57 verified and 1 ready, so no data was lost and a full restore is possible from the ledger alone",
+        "After repair, storypole list shows archived tasks with their original status plus an archived marker, and filtering by their status or by archived both return them",
+        "A task archived while Ready is readable as Ready-and-archived, proving the archived dimension is orthogonal rather than a status"
+      ],
+      "timestamp_ms": 1793293096932
+    },
+    {
+      "event": "task_updated",
+      "task_id": "d27c6705-2511-4cc9-9190-1687b0f38cdf",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": [
+        "Cascade measured before starting: TaskNode has no Default derive and there are 11 literal constructions, of which only 1 uses ..Default::default(), so adding archived_at touches roughly 10 sites across four repositories - contracts 2 (tests), storypole 4 (ops/mutations, ops/graph, two tests), joiner 3 (two tests plus engine_loop), benchwork 2 (integration and archive_service tests). Plan the edits per repo and gate each, rather than one sweeping edit."
+      ],
+      "timestamp_ms": 1793293193845
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "d27c6705-2511-4cc9-9190-1687b0f38cdf",
+      "claim": {
+        "agent_id": "cline",
+        "claimed_at_epoch_ms": 1793293289690,
+        "lease_expires_at_epoch_ms": 1793296889690,
+        "git_branch": "feat/archived-state",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "d27c6705-2511-4cc9-9190-1687b0f38cdf",
+      "from": "deferred",
+      "to": "in_progress",
+      "reason": "Claimed by cline",
+      "timestamp_ms": 1793293289690
+    },
+    {
+      "event": "task_verified",
+      "task_id": "d27c6705-2511-4cc9-9190-1687b0f38cdf",
+      "receipt": {
+        "verifier": "cline",
+        "command": "n/a",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "Closed across four repositories, each on feat/archived-state with the lease taken first. contracts 64ac860 adds archived_at_epoch_ms: Option<u64> to TaskNode with serde(default) and skip_serializing_if, so older ledgers still parse. storypole e3c35c4 makes replay set that timestamp instead of overwriting status - and because replay is sequential the status in hand is exactly the from field, so all 58 already-archived tasks were repaired with no migration script: verified 102 to 159 and ready 19 to 20, confirmed by ledger-verify. The index gained an archived_at column, a guarded ALTER for older files, and a replay_version in the cache key, because a replay change alters what a ledger means without touching the file. Queries hide archived by timestamp and an explicit archived status selects archived tasks. storypole 306a640 fixes unarchive, which guarded on a status that no longer occurs; leaving the archived state is now any non-archive transition. benchwork a191616 shows archived tasks by state, counts stats.archived from the timestamp and drops the status filter for that view. Final check: ledger-reconcile reports index and ledger agree, archived 58 on both sides with every status delta zero. Gates: storypole 36/36, benchwork 30/30, contracts 24/24, joiner 22/22, all clippy -D warnings clean.",
+        "verified_at_epoch_ms": 1793295618729,
+        "git_branch": "main",
+        "base_commit_sha": "92019b481c6580b467a9bbfdacfeed941fb50a30",
+        "head_commit_sha": "92019b481c6580b467a9bbfdacfeed941fb50a30",
+        "commit_shas": [
+          "92019b481c6580b467a9bbfdacfeed941fb50a30"
+        ],
+        "repo": null,
+        "chain_key": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "d27c6705-2511-4cc9-9190-1687b0f38cdf",
+      "from": "verified",
+      "to": "archived",
+      "reason": "Archived out of active backlog",
+      "timestamp_ms": 1793953243976
+    },
+    {
+      "event": "task_archived",
+      "task_id": "d27c6705-2511-4cc9-9190-1687b0f38cdf",
+      "status": "verified",
+      "timestamp_ms": 1794038014848
+    }
+  ]
+}
