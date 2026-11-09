@@ -3,6 +3,8 @@
 mod continuity;
 mod events;
 mod task;
+mod task_kind;
+mod task_scope;
 
 pub use continuity::{AgentClaim, HandoffPacket, PlanStep, TaskPlan, VerificationReceipt};
 pub use events::LedgerEvent;

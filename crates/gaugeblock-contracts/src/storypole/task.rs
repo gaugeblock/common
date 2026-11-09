@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use super::continuity::{AgentClaim, HandoffPacket, TaskPlan, VerificationReceipt};
+pub use super::task_scope::TaskScope;
 
 /// Category of backlog work item.
 ///
@@ -31,6 +32,27 @@ pub enum TaskKind {
     /// to the verification gate: a refactor must preserve behaviour and therefore needs tests, while a
     /// chore has no behaviour to preserve.
     Chore,
+    /// Documentation: prose that describes the system without changing what it does.
+    ///
+    /// Aligned with the Conventional Commits type of the same name, which law 7 already uses for exactly
+    /// this work. Distinct from [`TaskKind::Chore`], which is housekeeping with no narrative output: a
+    /// chore bumps a dependency, documentation explains the system to a reader.
+    Docs,
+    /// A measured performance improvement.
+    ///
+    /// Carries an obligation no other kind does: law 12 says nothing may be called faster without a
+    /// before/after measurement, on the same machine and inputs, recorded in the commit, the task and a
+    /// durable document. A `perf` task without a number is the false-completion shape `GB-334` refuses.
+    Perf,
+    /// Test coverage added or repaired: a new case, a fixed fixture, a suite that never ran.
+    Test,
+    /// Formatting and lint-only change; behaviour-preserving by definition, so a behaviour change filed
+    /// as style is a refactor or a fix mislabelled.
+    Style,
+    /// Continuous-integration configuration: the pipeline, its caching, its matrix.
+    Ci,
+    /// Build configuration: profiles, workspace manifests, packaging, release plumbing.
+    Build,
 }
 
 /// Lifecycle state of a task.
@@ -123,23 +145,6 @@ pub struct TaskDecision {
     pub resolved_by: Option<String>,
     /// Last mutation timestamp in epoch milliseconds.
     pub updated_at_epoch_ms: u64,
-}
-
-/// Multi-dimensional scope coordinates for filtering across repos, crates and symbols.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct TaskScope {
-    /// Target repository name.
-    pub repo: Option<String>,
-    /// Target crate or package name.
-    pub crate_name: Option<String>,
-    /// Target module path.
-    pub module_path: Option<String>,
-    /// Files the task expects to touch, used for collision warnings.
-    pub target_files: Vec<String>,
-    /// Symbols the task expects to change, used for collision warnings.
-    pub target_symbols: Vec<String>,
-    /// Free-form labels.
-    pub labels: Vec<String>,
 }
 
 /// A single backlog task node.
