@@ -1,4 +1,4 @@
-ticket_prefix = "SP"
+ticket_prefix = "CO"
 allowed_repos = []
 allowed_crates = []
 claim_ttl_minutes = 60
