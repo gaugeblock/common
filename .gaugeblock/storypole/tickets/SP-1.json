@@ -102,6 +102,56 @@
       "scope": null,
       "acceptance_criteria": null,
       "timestamp_ms": 1794271104608
+    },
+    {
+      "event": "task_verified",
+      "task_id": "3ae64ad7-bd48-4c7b-8552-95bdb3a77921",
+      "receipt": {
+        "verifier": "storypole-verify:cargo-test-fallback",
+        "command": "cargo test",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\n[fallback: no verification command configured; ran `cargo test`]\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+        "verified_at_epoch_ms": 1794271408954,
+        "git_branch": "main",
+        "base_commit_sha": null,
+        "head_commit_sha": "c9b1b4f18916c698bab0bed3d43cd318ce18ae7d",
+        "commit_shas": [
+          "c9b1b4f18916c698bab0bed3d43cd318ce18ae7d"
+        ],
+        "repo": "common",
+        "chain_key": null
+      }
+    },
+    {
+      "event": "task_verified",
+      "task_id": "3ae64ad7-bd48-4c7b-8552-95bdb3a77921",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794271701742,
+        "git_branch": "main",
+        "base_commit_sha": null,
+        "head_commit_sha": "c9b1b4f18916c698bab0bed3d43cd318ce18ae7d",
+        "commit_shas": [
+          "c9b1b4f18916c698bab0bed3d43cd318ce18ae7d"
+        ],
+        "repo": "common",
+        "chain_key": "common"
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "3ae64ad7-bd48-4c7b-8552-95bdb3a77921",
+      "title": null,
+      "description": "Found while verifying GB-337. The task is scoped to repo common with crate gaugeblock-contracts. The suite config HAS a chain keyed common, and the lookup order is crate, then repo, then default - so the repo key should have matched and run fmt/clippy/nextest/audit/docs. Instead the receipt says: no verification command configured for gaugeblock-contracts; falling back to cargo test, verifier storypole-verify:cargo-test-fallback.\n\nSo a ticket whose repository has a configured chain was certified by a weaker one. The receipt is honest about it - the warning exists and the verifier name differs - which is the good part and the reason this is a P2 rather than a P1: nothing is lying. But a weaker certification than the configuration promises is exactly the shape GB-272 and GB-316 were about, and it appeared for a ticket scoped to a repository that is in the list.\n\nWorth checking: whether the repo lookup uses the task scope.repo value or derives a name from the checkout directory, whether the common entry is keyed exactly common, and whether the receipt should refuse rather than fall back when a repository key exists but did not match - falling back silently is how a member chain came to run harness commands once before (GB-316).\n\nDIAGNOSED 2026-11-08. The lookup order is not the defect; the configuration source is.\n\nEvidence:\n  suite root .gaugeblock/config.toml   -> verification_commands present, 17 chain keys, including \"common\"\n  common/.gaugeblock/config.toml       -> the verification_commands key is absent entirely\n\nWhen a task scoped to a member repository is verified, the store loads THAT repository's config. The chains are\ndeclared once at the suite root, so a member store asks its own file for a chain keyed \"common\" (or for `default`),\nfinds neither, and correctly falls back to `cargo test`. The crate-then-repo-then-default order never reached a chain\nbecause there was no chain to reach. The receipt's warning was accurate: \"no verification command configured for\ngaugeblock-contracts\" is literally true for the config the store was holding.\n\nWHY THE FALLBACK IS THE RIGHT BEHAVIOUR AND STILL THE WRONG ANSWER: falling back keeps a member's verify from silently\nrunning harness commands (GB-316), so the guard is doing its job. What is missing is inheritance - a member store should\nconsult the suite config for a chain when its own config declares none, because the suite declares membership and the\nchains are keyed by the directory names membership uses (ADR 0008).\n\nPROPOSED FIX, not implemented here because it changes config resolution and needs its own tests: in the store's chain\nlookup, when the local config yields nothing, retry against the suite root's config before giving up. The receipt should\nname which file the chain came from, so `chain_key` answers \"which chain ran\" and a new field answers \"declared where\".\nThat distinction is what made this ticket hard to see: the receipt said which chain did not run, not which file was\nconsulted.\n\nSECOND QUESTION FROM THE TICKET, ANSWERED: the repo lookup uses `task.scope.repo` directly, and its value here is\nexactly \"common\", matching the suite key. No normalisation defect.\n\nIMPLEMENTATION PLAN, SITES IDENTIFIED, deliberately not started 2026-11-08. The diagnosis above is complete; what\nremains is two repositories and a test, and a config-resolution change is not something to land half-verified at the end\nof a session.\n\n1. common: `SuiteConfig` exposes `section`, `string`, `boolean` but not an arbitrary top-level key, and the chains live\n   at the top level as `verification_commands = [[\"key\", \"command\"], ...]`. Add `pub fn raw(&self, key: &str) ->\n   Option<&toml::Value>` and parse the array-of-pairs in storypole. Parsing stays in storypole for the reason\n   suite_config's own doc gives: the foundation crate loads, the tool interprets.\n\n2. storypole-core: `StorypoleConfig` needs the adopted chains plus a record of where they came from. `chain_key` answers\n   \"which chain ran\"; the missing field is \"declared where\". Without it the next reader repeats this diagnosis.\n\n3. storypole-core/src/store/mod.rs, BOTH construction sites - `open` at lines 69-76 and `open_exact` at 95-102, which\n   carry identical three-branch config loading. After the config is loaded: if `verification_commands` is empty, ask\n   `gaugeblock_workspace::Membership::containing(root_dir)` for the suite root and adopt its `verification_commands`.\n   storypole-core already depends on gaugeblock-workspace, so no new edge is created and the audit rule holds.\n\n4. Tests, at minimum: a member store whose own config has no chains gets the suite's chain for its own directory name; a\n   member whose config DOES declare chains keeps them (the suite never overrides a local declaration); a lone checkout\n   with no suite behaves exactly as today; and a task scoped to a repository with a chain no longer records\n   `storypole-verify:cargo-test-fallback`.\n\nThe fourth test is the one that actually closes this ticket, because it is the receipt the ticket was filed about.\n\nIMPLEMENTED 2026-11-08 (d8ad392), end-to-end proof still owed, plus a new inconsistency discovered while looking for it.\n\nWHAT IS PROVEN: `StorypoleConfig::inheriting` is all-or-nothing and three tests pin it - a repository with no chains\ninherits the suite's, one that declares chains keeps all of them and gains none, and a lone checkout is unchanged. 162\ntests pass, clippy clean. Both store construction sites inherit, so `open` and `open_exact` cannot disagree about a\ntask's chains.\n\nWHAT IS NOT PROVEN: a real receipt. The proof this ticket wants is a `common`-scoped verify whose receipt names the\nsuite's chain instead of `storypole-verify:cargo-test-fallback`, and that needs a full verify run.\n\nNEW FINDING WHILE LOOKING FOR THE PROOF: `storypole config check --dir common` still prints \"verification_commands is\nempty, so storypole verify falls back to cargo test\". It reads the config file directly rather than through a store, so\nit does not inherit - which means the audit now contradicts the behaviour it audits. A repository can have a chain that\n`verify` will use and an audit that says it has none. Either the audit should report inherited chains (and say where\nthey came from) or it should describe itself as reporting the file rather than the effective configuration. Leaving the\ntwo disagreeing is worse than either.\n\nThat is a second instance of the same shape as this bug: a reader that looks at the file and calls it the truth.\n\nPROVEN END TO END 2026-11-08. `storypole verify SP-1` run from common/ now records verifier `storypole-verify` and\nchain_key `common` - the suite's fmt+clippy+nextest+audit+docs chain, not the cargo-test fallback. The ticket file holds\nboth receipts side by side, which is the cleanest before/after this epic produced:\n  before: chain_key null     verifier storypole-verify:cargo-test-fallback\n  after:  chain_key \"common\" verifier storypole-verify\n\nTHE FIRST ATTEMPT AT THIS PROOF FAILED, and that is the part worth reading. d8ad392 implemented inheritance and passed\n162 tests, and the verify still fell back, because `verification_commands` lives under `[storypole]` in the suite config\nand the helper asked the ROOT table for it. Nothing inherited, nothing warned, and the unit tests could not see it: they\ntested `inheriting` and never the parse. Fixed in b3fa899.\n\nThat is the same defect this ticket was filed about, reproduced inside its own fix - a reader that looks one level off\nfrom where the truth lives and reports absence. Two instances in one ticket, four in the arc.\n\nSTILL OPEN, found while looking: `storypole config check` reads the config file directly and does not inherit, so it\nstill warns that verification_commands is empty for a repository whose verify now uses the suite's chain. The audit and\nthe verifier disagree, and one of them should say which it is reporting.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794271830690
     }
   ]
 }
