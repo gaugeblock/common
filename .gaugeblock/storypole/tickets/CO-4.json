@@ -1,0 +1,140 @@
+{
+  "events": [
+    {
+      "captured_by_agent": "cline",
+      "discovered_from_task_id": null,
+      "event": "deferred_item_captured",
+      "task": {
+        "acceptance_criteria": [],
+        "active_claim": null,
+        "created_at_epoch_ms": 1793256626064,
+        "decisions": [],
+        "description": "Three definitions of the same telemetry vocabulary now coexist: sawhorse-core defines CompilerDiagnostic and VerificationReport for its inference results, joiner-core defines its own for synthesis verification, and gaugeblock-contracts now owns the canonical AnonymizedSynthesisTrace set (GB-165 slice 2). Attempting to re-export the contracts copy inside joiner collided with the sawhorse names in four files, which is the detection working: the duplicates have silently coexisted because both crates use the same field names. Decide the single home - contracts - then have sawhorse and joiner re-export it, exactly as GB-143 did for the wire types. Must land before GB-165 slice 4 writes real traces, since the hook needs one record type to write.",
+        "edges": [],
+        "id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+        "kind": "tech_debt",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "gaugeblock-contracts",
+          "labels": [],
+          "module_path": null,
+          "repo": null,
+          "target_files": [
+            "common/crates/gaugeblock-contracts/src/telemetry.rs,sawhorse/crates/sawhorse-core/src,joiner/crates/joiner-core/src/model.rs"
+          ],
+          "target_symbols": [
+            "gaugeblock_contracts::telemetry::VerificationReport"
+          ]
+        },
+        "slug": "reconcile-the-three-definitions-of-the-telemetry-record-before-traces-are-written-8b9f6c",
+        "status": "triage",
+        "ticket_key": "CO-4",
+        "title": "Reconcile the three definitions of the telemetry record before traces are written",
+        "updated_at_epoch_ms": 1793256626064,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "cline",
+        "base_commit_sha": null,
+        "claimed_at_epoch_ms": 1793299117181,
+        "git_branch": "feat/telemetry-record",
+        "lease_expires_at_epoch_ms": 1793302717181
+      },
+      "event": "task_claimed",
+      "task_id": "8b9f6c1f-982f-43a5-9636-806d669a279e"
+    },
+    {
+      "event": "status_changed",
+      "from": "triage",
+      "reason": "Claimed by cline",
+      "task_id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+      "timestamp_ms": 1793299117181,
+      "to": "in_progress"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90",
+        "chain_key": null,
+        "command": "n/a",
+        "commit_shas": [
+          "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "main",
+        "head_commit_sha": "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90",
+        "repo": null,
+        "summary": "Closed across three repositories. contracts b025d50 adds Display for TelemetryTier rendering the snake_case wire names, and VerificationReport derives Default, both required by consumers that already relied on the local copies. joiner 9d5f83f and rabbet 10c9225 delete their own AnonymizedSynthesisTrace, TelemetryTier, CompilerDiagnostic and VerificationReport and re-export the contracts versions, so a trace spooled by joiner, captured by storypole and mined by rabbet is now one Rust type rather than three types over identical JSON. Seven construction sites across joiner spool.rs, rabbet db/queries.rs, cold_miner.rs and four test files pass the two optional provenance fields as None. Correcting an earlier claim on this ticket: sawhorse-core never defined these types - the ambiguity that blocked the first attempt came from contracts itself exporting the record twice, from miter.rs and telemetry.rs, which was fixed in 16e46ff. This unblocks GB-165 slice 4, where the verify hook needs exactly one record type to write. Gates: contracts 24/24, joiner 22/22, rabbet 7/7, all fmt clean and clippy -D warnings clean.",
+        "verified_at_epoch_ms": 1793300105062,
+        "verifier": "cline"
+      },
+      "task_id": "8b9f6c1f-982f-43a5-9636-806d669a279e"
+    },
+    {
+      "event": "status_changed",
+      "from": "verified",
+      "reason": "Archived out of active backlog",
+      "task_id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+      "timestamp_ms": 1793953204768,
+      "to": "archived"
+    },
+    {
+      "event": "task_archived",
+      "status": "verified",
+      "task_id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+      "timestamp_ms": 1794038014019
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [],
+    "active_claim": null,
+    "archived_at_epoch_ms": 1794038014019,
+    "created_at_epoch_ms": 1793256626064,
+    "decisions": [],
+    "description": "Three definitions of the same telemetry vocabulary now coexist: sawhorse-core defines CompilerDiagnostic and VerificationReport for its inference results, joiner-core defines its own for synthesis verification, and gaugeblock-contracts now owns the canonical AnonymizedSynthesisTrace set (GB-165 slice 2). Attempting to re-export the contracts copy inside joiner collided with the sawhorse names in four files, which is the detection working: the duplicates have silently coexisted because both crates use the same field names. Decide the single home - contracts - then have sawhorse and joiner re-export it, exactly as GB-143 did for the wire types. Must land before GB-165 slice 4 writes real traces, since the hook needs one record type to write.",
+    "edges": [],
+    "id": "8b9f6c1f-982f-43a5-9636-806d669a279e",
+    "kind": "tech_debt",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "gaugeblock-contracts",
+      "labels": [],
+      "module_path": null,
+      "repo": null,
+      "target_files": [
+        "common/crates/gaugeblock-contracts/src/telemetry.rs,sawhorse/crates/sawhorse-core/src,joiner/crates/joiner-core/src/model.rs"
+      ],
+      "target_symbols": [
+        "gaugeblock_contracts::telemetry::VerificationReport"
+      ]
+    },
+    "slug": "reconcile-the-three-definitions-of-the-telemetry-record-before-traces-are-written-8b9f6c",
+    "status": "verified",
+    "ticket_key": "CO-4",
+    "title": "Reconcile the three definitions of the telemetry record before traces are written",
+    "updated_at_epoch_ms": 1794038014019,
+    "verification_receipt": {
+      "base_commit_sha": "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90",
+      "chain_key": null,
+      "command": "n/a",
+      "commit_shas": [
+        "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "main",
+      "head_commit_sha": "2b6fbf4bb6e3dc523a340f09f1a5d953a1e45d90",
+      "repo": null,
+      "summary": "Closed across three repositories. contracts b025d50 adds Display for TelemetryTier rendering the snake_case wire names, and VerificationReport derives Default, both required by consumers that already relied on the local copies. joiner 9d5f83f and rabbet 10c9225 delete their own AnonymizedSynthesisTrace, TelemetryTier, CompilerDiagnostic and VerificationReport and re-export the contracts versions, so a trace spooled by joiner, captured by storypole and mined by rabbet is now one Rust type rather than three types over identical JSON. Seven construction sites across joiner spool.rs, rabbet db/queries.rs, cold_miner.rs and four test files pass the two optional provenance fields as None. Correcting an earlier claim on this ticket: sawhorse-core never defined these types - the ambiguity that blocked the first attempt came from contracts itself exporting the record twice, from miter.rs and telemetry.rs, which was fixed in 16e46ff. This unblocks GB-165 slice 4, where the verify hook needs exactly one record type to write. Gates: contracts 24/24, joiner 22/22, rabbet 7/7, all fmt clean and clippy -D warnings clean.",
+      "verified_at_epoch_ms": 1793300105062,
+      "verifier": "cline"
+    }
+  }
+}

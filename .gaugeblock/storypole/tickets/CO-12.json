@@ -1,0 +1,129 @@
+{
+  "events": [
+    {
+      "event": "task_created",
+      "task": {
+        "acceptance_criteria": [
+          "storypole add --kind docs succeeds and the task round-trips as docs; the error listing for an unknown kind names docs; a test proves an existing ledger line with kind feature still replays; docs is added to the CLI value list and the MCP dispatch"
+        ],
+        "active_claim": null,
+        "created_at_epoch_ms": 1794197069064,
+        "decisions": [],
+        "description": "storypole add --kind docs is rejected with \"unknown kind\", listing epic, bug, refactor, tech_debt, spike, feature, chore. Conventional Commits v1.0.0 is the suite commit standard (law 7) and accepts docs, perf, test, style, ci and build, so a task whose work is documentation has no kind that describes it and gets filed as chore or feature - the same mismatch that made chore unusable before it was added. Docs is added here because it is the one this work needs; perf, test, style, ci and build are recorded as a deferred follow-up rather than added speculatively, since a kind nothing uses is a kind nobody validates.",
+        "edges": [],
+        "id": "33c3abfd-22d4-44be-a978-64c311412554",
+        "kind": "bug",
+        "latest_handoff": null,
+        "plan": null,
+        "priority": 3,
+        "scope": {
+          "crate_name": "gaugeblock-contracts",
+          "labels": [],
+          "module_path": null,
+          "repo": "common",
+          "target_files": [],
+          "target_symbols": []
+        },
+        "slug": "taskkind-has-no-docs-variant-although-conventional-commits-accept-it-33c3ab",
+        "status": "ready",
+        "ticket_key": "CO-12",
+        "title": "TaskKind has no docs variant although conventional commits accept it",
+        "updated_at_epoch_ms": 1794197069064,
+        "verification_receipt": null
+      }
+    },
+    {
+      "claim": {
+        "agent_id": "cline-agent",
+        "base_commit_sha": "119385f7bf95dc37c42f6ad1761684ad3e60644b",
+        "claimed_at_epoch_ms": 1794197081052,
+        "git_branch": "feat/gb-342-docs-kind",
+        "lease_expires_at_epoch_ms": 1794200681052
+      },
+      "event": "task_claimed",
+      "task_id": "33c3abfd-22d4-44be-a978-64c311412554"
+    },
+    {
+      "event": "status_changed",
+      "from": "ready",
+      "reason": "Claimed by cline-agent",
+      "task_id": "33c3abfd-22d4-44be-a978-64c311412554",
+      "timestamp_ms": 1794197081052,
+      "to": "in_progress"
+    },
+    {
+      "event": "task_verified",
+      "receipt": {
+        "base_commit_sha": "119385f7bf95dc37c42f6ad1761684ad3e60644b",
+        "chain_key": "common",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "commit_shas": [
+          "35c07a1d21bf42e423ca534df875a4daa897c21b"
+        ],
+        "diagnostic_count": null,
+        "exit_code": 0,
+        "git_branch": "feat/gb-342-docs-kind",
+        "head_commit_sha": "35c07a1d21bf42e423ca534df875a4daa897c21b",
+        "repo": "common",
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794197290073,
+        "verifier": "storypole-verify"
+      },
+      "task_id": "33c3abfd-22d4-44be-a978-64c311412554"
+    },
+    {
+      "acceptance_criteria": null,
+      "description": "storypole add --kind docs is rejected with \"unknown kind\", listing epic, bug, refactor, tech_debt, spike, feature, chore. Conventional Commits v1.0.0 is the suite commit standard (law 7) and accepts docs, perf, test, style, ci and build, so a task whose work is documentation has no kind that describes it and gets filed as chore or feature - the same mismatch that made chore unusable before it was added. Docs is added here because it is the one this work needs; perf, test, style, ci and build are recorded as a deferred follow-up rather than added speculatively, since a kind nothing uses is a kind nobody validates.\n\nLIVE 2026-11-08, installed binary v0.1.0-beta.5, in a scratch git repo:\n\n  storypole add 'a documentation task' --kind docs\n    -> Created task CO-1 [Docs] P3: a documentation task\n  storypole list --json -> kind: docs\n  storypole add x --kind perf\n    -> unknown kind `perf`; expected one of: epic, bug, refactor, tech_debt, spike, feature, chore, docs\n\nCommitted 35c07a1 (common, contract) and 2efc5e2 (storypole, CLI plus MCP schema), merged to storypole main\nas 2835745. Verified with the common chain, exit 0.",
+      "event": "task_updated",
+      "priority": null,
+      "scope": null,
+      "task_id": "33c3abfd-22d4-44be-a978-64c311412554",
+      "timestamp_ms": 1794197325194,
+      "title": null
+    }
+  ],
+  "ticket": {
+    "acceptance_criteria": [
+      "storypole add --kind docs succeeds and the task round-trips as docs; the error listing for an unknown kind names docs; a test proves an existing ledger line with kind feature still replays; docs is added to the CLI value list and the MCP dispatch"
+    ],
+    "active_claim": null,
+    "created_at_epoch_ms": 1794197069064,
+    "decisions": [],
+    "description": "storypole add --kind docs is rejected with \"unknown kind\", listing epic, bug, refactor, tech_debt, spike, feature, chore. Conventional Commits v1.0.0 is the suite commit standard (law 7) and accepts docs, perf, test, style, ci and build, so a task whose work is documentation has no kind that describes it and gets filed as chore or feature - the same mismatch that made chore unusable before it was added. Docs is added here because it is the one this work needs; perf, test, style, ci and build are recorded as a deferred follow-up rather than added speculatively, since a kind nothing uses is a kind nobody validates.\n\nLIVE 2026-11-08, installed binary v0.1.0-beta.5, in a scratch git repo:\n\n  storypole add 'a documentation task' --kind docs\n    -> Created task CO-1 [Docs] P3: a documentation task\n  storypole list --json -> kind: docs\n  storypole add x --kind perf\n    -> unknown kind `perf`; expected one of: epic, bug, refactor, tech_debt, spike, feature, chore, docs\n\nCommitted 35c07a1 (common, contract) and 2efc5e2 (storypole, CLI plus MCP schema), merged to storypole main\nas 2835745. Verified with the common chain, exit 0.",
+    "edges": [],
+    "id": "33c3abfd-22d4-44be-a978-64c311412554",
+    "kind": "bug",
+    "latest_handoff": null,
+    "plan": null,
+    "priority": 3,
+    "scope": {
+      "crate_name": "gaugeblock-contracts",
+      "labels": [],
+      "module_path": null,
+      "repo": "common",
+      "target_files": [],
+      "target_symbols": []
+    },
+    "slug": "taskkind-has-no-docs-variant-although-conventional-commits-accept-it-33c3ab",
+    "status": "verified",
+    "ticket_key": "CO-12",
+    "title": "TaskKind has no docs variant although conventional commits accept it",
+    "updated_at_epoch_ms": 1794197325194,
+    "verification_receipt": {
+      "base_commit_sha": "119385f7bf95dc37c42f6ad1761684ad3e60644b",
+      "chain_key": "common",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "commit_shas": [
+        "35c07a1d21bf42e423ca534df875a4daa897c21b"
+      ],
+      "diagnostic_count": null,
+      "exit_code": 0,
+      "git_branch": "feat/gb-342-docs-kind",
+      "head_commit_sha": "35c07a1d21bf42e423ca534df875a4daa897c21b",
+      "repo": "common",
+      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794197290073,
+      "verifier": "storypole-verify"
+    }
+  }
+}
