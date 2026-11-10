@@ -1,164 +1,170 @@
 {
-  "events": [
-    {
-      "captured_by_agent": "user",
-      "discovered_from_task_id": null,
-      "event": "deferred_item_captured",
-      "task": {
-        "acceptance_criteria": [],
-        "active_claim": null,
-        "created_at_epoch_ms": 1794197325281,
-        "decisions": [],
-        "description": "TaskKind now carries epic, bug, refactor, tech_debt, spike, feature, chore and docs. Conventional Commits v1.0.0, which law 7 adopts, also defines perf, test, style, ci and build, so five accepted commit types still have no task kind and work matching them is filed as chore or feature. They were deliberately left out of CO-12 rather than added speculatively: a kind nothing uses is a kind nobody validates, and each one needs a decision about whether it changes the verification gate (a perf change must prove a measured improvement, which is stricter than any current kind).",
-        "edges": [],
-        "id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
-        "kind": "tech_debt",
-        "latest_handoff": null,
-        "plan": null,
-        "priority": 3,
-        "scope": {
-          "crate_name": null,
-          "labels": [],
-          "module_path": null,
-          "repo": null,
-          "target_files": [],
-          "target_symbols": [
-            "gaugeblock_contracts::storypole::TaskKind"
-          ]
-        },
-        "slug": "taskkind-is-missing-the-conventional-commit-types-perf-test-style-ci-and-build-6bd3f0",
-        "status": "triage",
-        "ticket_key": "CO-13",
-        "title": "TaskKind is missing the conventional commit types perf, test, style, ci and build",
-        "updated_at_epoch_ms": 1794197325281,
-        "verification_receipt": null
-      }
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "TaskKind now carries epic, bug, refactor, tech_debt, spike, feature, chore and docs. Conventional Commits v1.0.0, which law 7 adopts, also defines perf, test, style, ci and build, so five accepted commit types still have no task kind and work matching them is filed as chore or feature. They were deliberately left out of CO-12 rather than added speculatively: a kind nothing uses is a kind nobody validates, and each one needs a decision about whether it changes the verification gate (a perf change must prove a measured improvement, which is stricter than any current kind).\n\nEXPANDED 2026-11-08, after the docs kind showed what adding one kind costs.\n\nEMPIRICAL CASE (git log subjects, 400 per repo): build is used in benchwork 17, chalkline 11, outfeed 6,\nmiter 5, root 5, storypole 4, common 3; test in storypole 3, outfeed 2, benchwork 2; ci in miter 2,\nchalkline 2, benchwork 2; perf in storypole 2, chalkline 1, root 1; style in miter 1. So these are not\nspeculative categories: they are commit types in daily use that the tracker cannot express, and work\nmatching them is filed as chore or feature today.\n\nSCOPE, now including the structural fix. Adding docs required five hand-maintained enumerations: the\ncontract enum, the CLI KIND_NAMES array, the CLI parse_kind, the MCP parse_kind, and the MCP schema\nenum. Doing that five more times by hand is five more chances to drift, and the schema copy fails\ninvisibly because a client reads it before calling. So: TaskKind::ALL and TaskKind::as_str (plus a\nfrom_str that round-trips through serde) become the single source, the CLI and MCP lists derive from\nthem, and a test asserts the MCP schema's advertised enum equals ALL. Adding a kind then touches one\nfile and the compiler points at the rest.\n\nPERF CARRIES A GATE OBLIGATION. Law 12 says no change may be called faster without a before/after\nmeasurement recorded in three places. A perf kind that does not require one is worse than no perf kind:\nit licenses the exact false-completion this work has been removing. The obligation is recorded on SP-40\n(verify gates) rather than enforced here, because the gate belongs with the other refusals.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
-      "timestamp_ms": 1794197771222,
-      "title": null
-    },
-    {
-      "claim": {
-        "agent_id": "cline-agent",
-        "base_commit_sha": null,
-        "claimed_at_epoch_ms": 1794197771379,
-        "git_branch": "feat/gb-343-kind-registry",
-        "lease_expires_at_epoch_ms": 1794201371379
-      },
-      "event": "task_claimed",
-      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782"
-    },
-    {
-      "event": "status_changed",
-      "from": "triage",
-      "reason": "Claimed by cline-agent",
-      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
-      "timestamp_ms": 1794197771379,
-      "to": "in_progress"
-    },
-    {
-      "acceptance_criteria": null,
-      "description": null,
-      "event": "task_updated",
-      "priority": null,
-      "scope": {
-        "crate_name": "gaugeblock-contracts",
-        "labels": [],
-        "module_path": null,
-        "repo": "common",
-        "target_files": [],
-        "target_symbols": [
-          "gaugeblock_contracts::storypole::TaskKind"
-        ]
-      },
-      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
-      "timestamp_ms": 1794198312651,
-      "title": null
-    },
-    {
-      "event": "task_verified",
-      "receipt": {
-        "base_commit_sha": "119385f7bf95dc37c42f6ad1761684ad3e60644b",
-        "chain_key": "common",
-        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
-        "commit_shas": [
-          "35c07a1d21bf42e423ca534df875a4daa897c21b",
-          "641e70efa67559b44a72620fccfe50c05f326f36",
-          "3dab4a9e4c8ce18bed22953238614fe409c7b321"
-        ],
-        "diagnostic_count": null,
-        "exit_code": 0,
-        "git_branch": "feat/gb-342-docs-kind",
-        "head_commit_sha": "3dab4a9e4c8ce18bed22953238614fe409c7b321",
-        "repo": "common",
-        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
-        "verified_at_epoch_ms": 1794198390430,
-        "verifier": "storypole-verify"
-      },
-      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782"
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "TaskKind now carries epic, bug, refactor, tech_debt, spike, feature, chore and docs. Conventional Commits v1.0.0, which law 7 adopts, also defines perf, test, style, ci and build, so five accepted commit types still have no task kind and work matching them is filed as chore or feature. They were deliberately left out of CO-12 rather than added speculatively: a kind nothing uses is a kind nobody validates, and each one needs a decision about whether it changes the verification gate (a perf change must prove a measured improvement, which is stricter than any current kind).\n\nEXPANDED 2026-11-08, after the docs kind showed what adding one kind costs.\n\nEMPIRICAL CASE (git log subjects, 400 per repo): build is used in benchwork 17, chalkline 11, outfeed 6,\nmiter 5, root 5, storypole 4, common 3; test in storypole 3, outfeed 2, benchwork 2; ci in miter 2,\nchalkline 2, benchwork 2; perf in storypole 2, chalkline 1, root 1; style in miter 1. So these are not\nspeculative categories: they are commit types in daily use that the tracker cannot express, and work\nmatching them is filed as chore or feature today.\n\nSCOPE, now including the structural fix. Adding docs required five hand-maintained enumerations: the\ncontract enum, the CLI KIND_NAMES array, the CLI parse_kind, the MCP parse_kind, and the MCP schema\nenum. Doing that five more times by hand is five more chances to drift, and the schema copy fails\ninvisibly because a client reads it before calling. So: TaskKind::ALL and TaskKind::as_str (plus a\nfrom_str that round-trips through serde) become the single source, the CLI and MCP lists derive from\nthem, and a test asserts the MCP schema's advertised enum equals ALL. Adding a kind then touches one\nfile and the compiler points at the rest.\n\nPERF CARRIES A GATE OBLIGATION. Law 12 says no change may be called faster without a before/after\nmeasurement recorded in three places. A perf kind that does not require one is worse than no perf kind:\nit licenses the exact false-completion this work has been removing. The obligation is recorded on SP-40\n(verify gates) rather than enforced here, because the gate belongs with the other refusals.\n\nLIVE 2026-11-08, installed binary v0.1.0-beta.5, in a scratch git repo:\n\n  --kind perf|test|style|ci|build  -> Created CO-1..SP-5 with kinds [Perf, Test, Style, Ci, Build]\n  --kind TECH-DEBT                 -> TechDebt (the tolerant parse also accepts techdebt)\n  --kind wip                       -> unknown kind `wip`; expected one of: epic, feature, refactor, bug,\n                                      tech_debt, spike, chore, docs, perf, test, style, ci, build\n\nThe list in that message is generated from TaskKind::ALL, which is the single source the CLI and MCP schema\nnow derive from. Commits: 641e70e (contract), 73355f0 (CLI and MCP), 3dab4a9 (test split), merged as\n8769ccc.\n\nThree files crossed the 250-line limit while this landed and were split rather than trimmed: task.rs into\ntask_kind.rs and task_scope.rs, storypole_wire.rs into task_kind_wire.rs, and schema.rs into\ntests/schema_kinds.rs. The common chain refused to certify the task until the last of those was fixed.\n\nPROCESS FAILURE worth recording: the three common commits were made while HEAD sat on\nfeat/gb-342-docs-kind, and the follow-up git push origin main pushed an unchanged main and reported\nsuccess - the commits reached origin only after an explicit merge (8769ccc). The receipt for this task\nnames feat/gb-342-docs-kind as its branch, which is accurate but is not where the work now lives. Pushing a\nref is not the same as publishing your work.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
-      "timestamp_ms": 1794198438447,
-      "title": null
-    }
-  ],
   "ticket": {
-    "acceptance_criteria": [],
-    "active_claim": null,
-    "created_at_epoch_ms": 1794197325281,
-    "decisions": [],
-    "description": "TaskKind now carries epic, bug, refactor, tech_debt, spike, feature, chore and docs. Conventional Commits v1.0.0, which law 7 adopts, also defines perf, test, style, ci and build, so five accepted commit types still have no task kind and work matching them is filed as chore or feature. They were deliberately left out of CO-12 rather than added speculatively: a kind nothing uses is a kind nobody validates, and each one needs a decision about whether it changes the verification gate (a perf change must prove a measured improvement, which is stricter than any current kind).\n\nEXPANDED 2026-11-08, after the docs kind showed what adding one kind costs.\n\nEMPIRICAL CASE (git log subjects, 400 per repo): build is used in benchwork 17, chalkline 11, outfeed 6,\nmiter 5, root 5, storypole 4, common 3; test in storypole 3, outfeed 2, benchwork 2; ci in miter 2,\nchalkline 2, benchwork 2; perf in storypole 2, chalkline 1, root 1; style in miter 1. So these are not\nspeculative categories: they are commit types in daily use that the tracker cannot express, and work\nmatching them is filed as chore or feature today.\n\nSCOPE, now including the structural fix. Adding docs required five hand-maintained enumerations: the\ncontract enum, the CLI KIND_NAMES array, the CLI parse_kind, the MCP parse_kind, and the MCP schema\nenum. Doing that five more times by hand is five more chances to drift, and the schema copy fails\ninvisibly because a client reads it before calling. So: TaskKind::ALL and TaskKind::as_str (plus a\nfrom_str that round-trips through serde) become the single source, the CLI and MCP lists derive from\nthem, and a test asserts the MCP schema's advertised enum equals ALL. Adding a kind then touches one\nfile and the compiler points at the rest.\n\nPERF CARRIES A GATE OBLIGATION. Law 12 says no change may be called faster without a before/after\nmeasurement recorded in three places. A perf kind that does not require one is worse than no perf kind:\nit licenses the exact false-completion this work has been removing. The obligation is recorded on SP-40\n(verify gates) rather than enforced here, because the gate belongs with the other refusals.\n\nLIVE 2026-11-08, installed binary v0.1.0-beta.5, in a scratch git repo:\n\n  --kind perf|test|style|ci|build  -> Created CO-1..SP-5 with kinds [Perf, Test, Style, Ci, Build]\n  --kind TECH-DEBT                 -> TechDebt (the tolerant parse also accepts techdebt)\n  --kind wip                       -> unknown kind `wip`; expected one of: epic, feature, refactor, bug,\n                                      tech_debt, spike, chore, docs, perf, test, style, ci, build\n\nThe list in that message is generated from TaskKind::ALL, which is the single source the CLI and MCP schema\nnow derive from. Commits: 641e70e (contract), 73355f0 (CLI and MCP), 3dab4a9 (test split), merged as\n8769ccc.\n\nThree files crossed the 250-line limit while this landed and were split rather than trimmed: task.rs into\ntask_kind.rs and task_scope.rs, storypole_wire.rs into task_kind_wire.rs, and schema.rs into\ntests/schema_kinds.rs. The common chain refused to certify the task until the last of those was fixed.\n\nPROCESS FAILURE worth recording: the three common commits were made while HEAD sat on\nfeat/gb-342-docs-kind, and the follow-up git push origin main pushed an unchanged main and reported\nsuccess - the commits reached origin only after an explicit merge (8769ccc). The receipt for this task\nnames feat/gb-342-docs-kind as its branch, which is accurate but is not where the work now lives. Pushing a\nref is not the same as publishing your work.",
-    "edges": [],
     "id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
+    "ticket_key": "CO-13",
+    "slug": "taskkind-is-missing-the-conventional-commit-types-perf-test-style-ci-and-build-6bd3f0",
+    "title": "TaskKind is missing the conventional commit types perf, test, style, ci and build",
+    "description": "TaskKind now carries epic, bug, refactor, tech_debt, spike, feature, chore and docs. Conventional Commits v1.0.0, which law 7 adopts, also defines perf, test, style, ci and build, so five accepted commit types still have no task kind and work matching them is filed as chore or feature. They were deliberately left out of CO-12 rather than added speculatively: a kind nothing uses is a kind nobody validates, and each one needs a decision about whether it changes the verification gate (a perf change must prove a measured improvement, which is stricter than any current kind).\n\nEXPANDED 2026-11-08, after the docs kind showed what adding one kind costs.\n\nEMPIRICAL CASE (git log subjects, 400 per repo): build is used in benchwork 17, chalkline 11, outfeed 6,\nmiter 5, root 5, storypole 4, common 3; test in storypole 3, outfeed 2, benchwork 2; ci in miter 2,\nchalkline 2, benchwork 2; perf in storypole 2, chalkline 1, root 1; style in miter 1. So these are not\nspeculative categories: they are commit types in daily use that the tracker cannot express, and work\nmatching them is filed as chore or feature today.\n\nSCOPE, now including the structural fix. Adding docs required five hand-maintained enumerations: the\ncontract enum, the CLI KIND_NAMES array, the CLI parse_kind, the MCP parse_kind, and the MCP schema\nenum. Doing that five more times by hand is five more chances to drift, and the schema copy fails\ninvisibly because a client reads it before calling. So: TaskKind::ALL and TaskKind::as_str (plus a\nfrom_str that round-trips through serde) become the single source, the CLI and MCP lists derive from\nthem, and a test asserts the MCP schema's advertised enum equals ALL. Adding a kind then touches one\nfile and the compiler points at the rest.\n\nPERF CARRIES A GATE OBLIGATION. Law 12 says no change may be called faster without a before/after\nmeasurement recorded in three places. A perf kind that does not require one is worse than no perf kind:\nit licenses the exact false-completion this work has been removing. The obligation is recorded on SP-40\n(verify gates) rather than enforced here, because the gate belongs with the other refusals.\n\nLIVE 2026-11-08, installed binary v0.1.0-beta.5, in a scratch git repo:\n\n  --kind perf|test|style|ci|build  -> Created CO-1..SP-5 with kinds [Perf, Test, Style, Ci, Build]\n  --kind TECH-DEBT                 -> TechDebt (the tolerant parse also accepts techdebt)\n  --kind wip                       -> unknown kind `wip`; expected one of: epic, feature, refactor, bug,\n                                      tech_debt, spike, chore, docs, perf, test, style, ci, build\n\nThe list in that message is generated from TaskKind::ALL, which is the single source the CLI and MCP schema\nnow derive from. Commits: 641e70e (contract), 73355f0 (CLI and MCP), 3dab4a9 (test split), merged as\n8769ccc.\n\nThree files crossed the 250-line limit while this landed and were split rather than trimmed: task.rs into\ntask_kind.rs and task_scope.rs, storypole_wire.rs into task_kind_wire.rs, and schema.rs into\ntests/schema_kinds.rs. The common chain refused to certify the task until the last of those was fixed.\n\nPROCESS FAILURE worth recording: the three common commits were made while HEAD sat on\nfeat/gb-342-docs-kind, and the follow-up git push origin main pushed an unchanged main and reported\nsuccess - the commits reached origin only after an explicit merge (8769ccc). The receipt for this task\nnames feat/gb-342-docs-kind as its branch, which is accurate but is not where the work now lives. Pushing a\nref is not the same as publishing your work.",
     "kind": "tech_debt",
-    "latest_handoff": null,
-    "plan": null,
+    "status": "verified",
     "priority": 3,
     "scope": {
-      "crate_name": "gaugeblock-contracts",
-      "labels": [],
-      "module_path": null,
       "repo": "common",
+      "crate_name": "gaugeblock-contracts",
+      "module_path": null,
       "target_files": [],
       "target_symbols": [
         "gaugeblock_contracts::storypole::TaskKind"
-      ]
+      ],
+      "labels": []
     },
-    "slug": "taskkind-is-missing-the-conventional-commit-types-perf-test-style-ci-and-build-6bd3f0",
-    "status": "verified",
-    "ticket_key": "CO-13",
-    "title": "TaskKind is missing the conventional commit types perf, test, style, ci and build",
-    "updated_at_epoch_ms": 1794198438447,
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
     "verification_receipt": {
-      "base_commit_sha": "119385f7bf95dc37c42f6ad1761684ad3e60644b",
-      "chain_key": "common",
+      "verifier": "storypole-verify",
       "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794198390430,
+      "git_branch": "feat/gb-342-docs-kind",
+      "base_commit_sha": "119385f7bf95dc37c42f6ad1761684ad3e60644b",
+      "head_commit_sha": "3dab4a9e4c8ce18bed22953238614fe409c7b321",
       "commit_shas": [
         "35c07a1d21bf42e423ca534df875a4daa897c21b",
         "641e70efa67559b44a72620fccfe50c05f326f36",
         "3dab4a9e4c8ce18bed22953238614fe409c7b321"
       ],
-      "diagnostic_count": null,
-      "exit_code": 0,
-      "git_branch": "feat/gb-342-docs-kind",
-      "head_commit_sha": "3dab4a9e4c8ce18bed22953238614fe409c7b321",
       "repo": "common",
-      "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
-      "verified_at_epoch_ms": 1794198390430,
-      "verifier": "storypole-verify"
+      "chain_key": "common"
+    },
+    "created_at_epoch_ms": 1794197325281,
+    "updated_at_epoch_ms": 1794198438447
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
+        "ticket_key": "CO-13",
+        "slug": "taskkind-is-missing-the-conventional-commit-types-perf-test-style-ci-and-build-6bd3f0",
+        "title": "TaskKind is missing the conventional commit types perf, test, style, ci and build",
+        "description": "TaskKind now carries epic, bug, refactor, tech_debt, spike, feature, chore and docs. Conventional Commits v1.0.0, which law 7 adopts, also defines perf, test, style, ci and build, so five accepted commit types still have no task kind and work matching them is filed as chore or feature. They were deliberately left out of CO-12 rather than added speculatively: a kind nothing uses is a kind nobody validates, and each one needs a decision about whether it changes the verification gate (a perf change must prove a measured improvement, which is stricter than any current kind).",
+        "kind": "tech_debt",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": null,
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "gaugeblock_contracts::storypole::TaskKind"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794197325281,
+        "updated_at_epoch_ms": 1794197325281
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_updated",
+      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
+      "title": null,
+      "description": "TaskKind now carries epic, bug, refactor, tech_debt, spike, feature, chore and docs. Conventional Commits v1.0.0, which law 7 adopts, also defines perf, test, style, ci and build, so five accepted commit types still have no task kind and work matching them is filed as chore or feature. They were deliberately left out of CO-12 rather than added speculatively: a kind nothing uses is a kind nobody validates, and each one needs a decision about whether it changes the verification gate (a perf change must prove a measured improvement, which is stricter than any current kind).\n\nEXPANDED 2026-11-08, after the docs kind showed what adding one kind costs.\n\nEMPIRICAL CASE (git log subjects, 400 per repo): build is used in benchwork 17, chalkline 11, outfeed 6,\nmiter 5, root 5, storypole 4, common 3; test in storypole 3, outfeed 2, benchwork 2; ci in miter 2,\nchalkline 2, benchwork 2; perf in storypole 2, chalkline 1, root 1; style in miter 1. So these are not\nspeculative categories: they are commit types in daily use that the tracker cannot express, and work\nmatching them is filed as chore or feature today.\n\nSCOPE, now including the structural fix. Adding docs required five hand-maintained enumerations: the\ncontract enum, the CLI KIND_NAMES array, the CLI parse_kind, the MCP parse_kind, and the MCP schema\nenum. Doing that five more times by hand is five more chances to drift, and the schema copy fails\ninvisibly because a client reads it before calling. So: TaskKind::ALL and TaskKind::as_str (plus a\nfrom_str that round-trips through serde) become the single source, the CLI and MCP lists derive from\nthem, and a test asserts the MCP schema's advertised enum equals ALL. Adding a kind then touches one\nfile and the compiler points at the rest.\n\nPERF CARRIES A GATE OBLIGATION. Law 12 says no change may be called faster without a before/after\nmeasurement recorded in three places. A perf kind that does not require one is worse than no perf kind:\nit licenses the exact false-completion this work has been removing. The obligation is recorded on SP-40\n(verify gates) rather than enforced here, because the gate belongs with the other refusals.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794197771222
+    },
+    {
+      "event": "task_claimed",
+      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
+      "claim": {
+        "agent_id": "cline-agent",
+        "claimed_at_epoch_ms": 1794197771379,
+        "lease_expires_at_epoch_ms": 1794201371379,
+        "git_branch": "feat/gb-343-kind-registry",
+        "base_commit_sha": null
+      }
+    },
+    {
+      "event": "status_changed",
+      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
+      "from": "triage",
+      "to": "in_progress",
+      "reason": "Claimed by cline-agent",
+      "timestamp_ms": 1794197771379
+    },
+    {
+      "event": "task_updated",
+      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
+      "title": null,
+      "description": null,
+      "priority": null,
+      "scope": {
+        "repo": "common",
+        "crate_name": "gaugeblock-contracts",
+        "module_path": null,
+        "target_files": [],
+        "target_symbols": [
+          "gaugeblock_contracts::storypole::TaskKind"
+        ],
+        "labels": []
+      },
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794198312651
+    },
+    {
+      "event": "task_verified",
+      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "AUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794198390430,
+        "git_branch": "feat/gb-342-docs-kind",
+        "base_commit_sha": "119385f7bf95dc37c42f6ad1761684ad3e60644b",
+        "head_commit_sha": "3dab4a9e4c8ce18bed22953238614fe409c7b321",
+        "commit_shas": [
+          "35c07a1d21bf42e423ca534df875a4daa897c21b",
+          "641e70efa67559b44a72620fccfe50c05f326f36",
+          "3dab4a9e4c8ce18bed22953238614fe409c7b321"
+        ],
+        "repo": "common",
+        "chain_key": "common"
+      }
+    },
+    {
+      "event": "task_updated",
+      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
+      "title": null,
+      "description": "TaskKind now carries epic, bug, refactor, tech_debt, spike, feature, chore and docs. Conventional Commits v1.0.0, which law 7 adopts, also defines perf, test, style, ci and build, so five accepted commit types still have no task kind and work matching them is filed as chore or feature. They were deliberately left out of CO-12 rather than added speculatively: a kind nothing uses is a kind nobody validates, and each one needs a decision about whether it changes the verification gate (a perf change must prove a measured improvement, which is stricter than any current kind).\n\nEXPANDED 2026-11-08, after the docs kind showed what adding one kind costs.\n\nEMPIRICAL CASE (git log subjects, 400 per repo): build is used in benchwork 17, chalkline 11, outfeed 6,\nmiter 5, root 5, storypole 4, common 3; test in storypole 3, outfeed 2, benchwork 2; ci in miter 2,\nchalkline 2, benchwork 2; perf in storypole 2, chalkline 1, root 1; style in miter 1. So these are not\nspeculative categories: they are commit types in daily use that the tracker cannot express, and work\nmatching them is filed as chore or feature today.\n\nSCOPE, now including the structural fix. Adding docs required five hand-maintained enumerations: the\ncontract enum, the CLI KIND_NAMES array, the CLI parse_kind, the MCP parse_kind, and the MCP schema\nenum. Doing that five more times by hand is five more chances to drift, and the schema copy fails\ninvisibly because a client reads it before calling. So: TaskKind::ALL and TaskKind::as_str (plus a\nfrom_str that round-trips through serde) become the single source, the CLI and MCP lists derive from\nthem, and a test asserts the MCP schema's advertised enum equals ALL. Adding a kind then touches one\nfile and the compiler points at the rest.\n\nPERF CARRIES A GATE OBLIGATION. Law 12 says no change may be called faster without a before/after\nmeasurement recorded in three places. A perf kind that does not require one is worse than no perf kind:\nit licenses the exact false-completion this work has been removing. The obligation is recorded on SP-40\n(verify gates) rather than enforced here, because the gate belongs with the other refusals.\n\nLIVE 2026-11-08, installed binary v0.1.0-beta.5, in a scratch git repo:\n\n  --kind perf|test|style|ci|build  -> Created CO-1..SP-5 with kinds [Perf, Test, Style, Ci, Build]\n  --kind TECH-DEBT                 -> TechDebt (the tolerant parse also accepts techdebt)\n  --kind wip                       -> unknown kind `wip`; expected one of: epic, feature, refactor, bug,\n                                      tech_debt, spike, chore, docs, perf, test, style, ci, build\n\nThe list in that message is generated from TaskKind::ALL, which is the single source the CLI and MCP schema\nnow derive from. Commits: 641e70e (contract), 73355f0 (CLI and MCP), 3dab4a9 (test split), merged as\n8769ccc.\n\nThree files crossed the 250-line limit while this landed and were split rather than trimmed: task.rs into\ntask_kind.rs and task_scope.rs, storypole_wire.rs into task_kind_wire.rs, and schema.rs into\ntests/schema_kinds.rs. The common chain refused to certify the task until the last of those was fixed.\n\nPROCESS FAILURE worth recording: the three common commits were made while HEAD sat on\nfeat/gb-342-docs-kind, and the follow-up git push origin main pushed an unchanged main and reported\nsuccess - the commits reached origin only after an explicit merge (8769ccc). The receipt for this task\nnames feat/gb-342-docs-kind as its branch, which is accurate but is not where the work now lives. Pushing a\nref is not the same as publishing your work.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794198438447
+    },
+    {
+      "event": "task_archived",
+      "task_id": "6bd3f09a-284f-49ff-96fe-a595a86c3782",
+      "status": "verified",
+      "timestamp_ms": 1794343397903
     }
-  }
+  ]
 }

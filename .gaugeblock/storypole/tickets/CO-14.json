@@ -1,132 +1,138 @@
 {
-  "events": [
-    {
-      "captured_by_agent": "user",
-      "discovered_from_task_id": null,
-      "event": "deferred_item_captured",
-      "task": {
-        "acceptance_criteria": [],
-        "active_claim": null,
-        "created_at_epoch_ms": 1794206051958,
-        "decisions": [],
-        "description": "GaugeblockPaths exposes ledger() - the path to .gaugeblock/storypole/ledger.jsonl - and nothing for the layout tickets now use. Consumers therefore either spell tickets/KEY.json themselves or reach for the state through a store API, and the sweep that followed ADR 0009 found one consumer (benchwork context injection) that took the first route and silently lost all data when the layout changed. Add a records-aware accessor beside ledger() (the tickets directory, and a helper that reports which layout a store is in) and mark ledger() as the legacy layout in its doc comment, so the next reader has to choose deliberately rather than copying the ledger path because it is the only one offered. Cross-repo: this is the shared helper every tool uses to find storypole state.",
-        "edges": [],
-        "id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
-        "kind": "tech_debt",
-        "latest_handoff": null,
-        "plan": null,
-        "priority": 3,
-        "scope": {
-          "crate_name": null,
-          "labels": [],
-          "module_path": null,
-          "repo": "common",
-          "target_files": [],
-          "target_symbols": [
-            "gaugeblock_workspace::GaugeblockPaths"
-          ]
-        },
-        "slug": "gaugeblockpaths-offers-a-ledger-path-but-no-records-path-so-consumers-copy-the-wrong-filename-591e5f",
-        "status": "triage",
-        "ticket_key": "CO-14",
-        "title": "GaugeblockPaths offers a ledger path but no records path, so consumers copy the wrong filename",
-        "updated_at_epoch_ms": 1794206051958,
-        "verification_receipt": null
-      }
-    },
-    {
-      "acceptance_criteria": null,
-      "description": null,
-      "event": "task_updated",
-      "priority": 2,
-      "scope": null,
-      "task_id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
-      "timestamp_ms": 1794206059162,
-      "title": null
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "GaugeblockPaths exposes ledger() - the path to .gaugeblock/storypole/ledger.jsonl - and nothing for the layout tickets now use. Consumers therefore either spell tickets/KEY.json themselves or reach for the state through a store API, and the sweep that followed ADR 0009 found one consumer (benchwork context injection) that took the first route and silently lost all data when the layout changed. Add a records-aware accessor beside ledger() (the tickets directory, and a helper that reports which layout a store is in) and mark ledger() as the legacy layout in its doc comment, so the next reader has to choose deliberately rather than copying the ledger path because it is the only one offered. Cross-repo: this is the shared helper every tool uses to find storypole state.\n\nSCOPE SHARPENED 2026-11-08, after a consumer sweep.\n\nThe failure that prompted this was not a library boundary breaking: every storypole_core API call site in\nbenchwork survived ADR 0009 untouched. The one site that broke spelled ledger.jsonl itself. So the deliverable\nhere is not just an accessor, it is making the wrong thing impossible:\n\n  storypole_core::state::load(dot_dir) -> Result<LoadedState>\n\none call that returns the tasks and events of a store whichever layout it uses, replacing every consumer that\ncurrently decides which file to read. benchwork's context injector becomes one line (GB-349); the same helper\nserves chalkline, joiner and outfeed, which all depend on storypole-core already and would otherwise each\nre-derive the rule.\n\nAlso offer the path accessor beside ledger() and mark ledger() as the legacy layout in its own doc comment,\nso copying it requires choosing it rather than finding it alone.\n\nWhy not a CLI/MCP boundary or a consumer sub-crate instead: benchwork is a daemon serving a UI panel, so a\nprocess spawn per task-list refresh and typed errors degrading to stderr are both real regressions; four\nrepositories already consume storypole-core in-process, so a one-consumer crate is not the shape of the problem;\nand MCP is a protocol for agents, not IPC between two of our own daemons.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
-      "timestamp_ms": 1794206740930,
-      "title": null
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "GaugeblockPaths exposes ledger() - the path to .gaugeblock/storypole/ledger.jsonl - and nothing for the layout tickets now use. Consumers therefore either spell tickets/KEY.json themselves or reach for the state through a store API, and the sweep that followed ADR 0009 found one consumer (benchwork context injection) that took the first route and silently lost all data when the layout changed. Add a records-aware accessor beside ledger() (the tickets directory, and a helper that reports which layout a store is in) and mark ledger() as the legacy layout in its doc comment, so the next reader has to choose deliberately rather than copying the ledger path because it is the only one offered. Cross-repo: this is the shared helper every tool uses to find storypole state.\n\nSCOPE SHARPENED 2026-11-08, after a consumer sweep.\n\nThe failure that prompted this was not a library boundary breaking: every storypole_core API call site in\nbenchwork survived ADR 0009 untouched. The one site that broke spelled ledger.jsonl itself. So the deliverable\nhere is not just an accessor, it is making the wrong thing impossible:\n\n  storypole_core::state::load(dot_dir) -> Result<LoadedState>\n\none call that returns the tasks and events of a store whichever layout it uses, replacing every consumer that\ncurrently decides which file to read. benchwork's context injector becomes one line (GB-349); the same helper\nserves chalkline, joiner and outfeed, which all depend on storypole-core already and would otherwise each\nre-derive the rule.\n\nAlso offer the path accessor beside ledger() and mark ledger() as the legacy layout in its own doc comment,\nso copying it requires choosing it rather than finding it alone.\n\nWhy not a CLI/MCP boundary or a consumer sub-crate instead: benchwork is a daemon serving a UI panel, so a\nprocess spawn per task-list refresh and typed errors degrading to stderr are both real regressions; four\nrepositories already consume storypole-core in-process, so a one-consumer crate is not the shape of the problem;\nand MCP is a protocol for agents, not IPC between two of our own daemons.\n\nDONE 2026-11-08, in two commits, one per repository.\n\nstorypole (e92f032): storypole_core::state::load returns a store's tasks and events whichever layout holds them,\nplus the layout it found. One call replaces \"each consumer decides which file to read\" for benchwork, chalkline,\njoiner and outfeed. An absent store is empty rather than an error, because a panel should render nothing rather\nthan fail. Three tests: empty, records, legacy ledger.\n\ncommon (33a3235): GaugeblockPaths gained storypole_tickets() beside ledger(), and ledger() now says in its own\ncomment that it is the legacy layout and that hard-coding it reads nothing in a migrated store. Both comments\npoint at state::load as the route to prefer, so the pair documents the right answer rather than only offering\npaths.\n\nNeither commit is invoked by a consumer yet - GB-349 is the first caller.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
-      "timestamp_ms": 1794208347861,
-      "title": null
-    },
-    {
-      "event": "task_verified",
-      "receipt": {
-        "base_commit_sha": null,
-        "chain_key": "common",
-        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
-        "commit_shas": [
-          "33a3235e67dc706ab0e1af89aab8ea68e2039c10"
-        ],
-        "diagnostic_count": null,
-        "exit_code": 0,
-        "git_branch": "main",
-        "head_commit_sha": "33a3235e67dc706ab0e1af89aab8ea68e2039c10",
-        "repo": "common",
-        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
-        "verified_at_epoch_ms": 1794208348030,
-        "verifier": "storypole-verify"
-      },
-      "task_id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931"
-    }
-  ],
   "ticket": {
-    "acceptance_criteria": [],
-    "active_claim": null,
-    "created_at_epoch_ms": 1794206051958,
-    "decisions": [],
-    "description": "GaugeblockPaths exposes ledger() - the path to .gaugeblock/storypole/ledger.jsonl - and nothing for the layout tickets now use. Consumers therefore either spell tickets/KEY.json themselves or reach for the state through a store API, and the sweep that followed ADR 0009 found one consumer (benchwork context injection) that took the first route and silently lost all data when the layout changed. Add a records-aware accessor beside ledger() (the tickets directory, and a helper that reports which layout a store is in) and mark ledger() as the legacy layout in its doc comment, so the next reader has to choose deliberately rather than copying the ledger path because it is the only one offered. Cross-repo: this is the shared helper every tool uses to find storypole state.\n\nSCOPE SHARPENED 2026-11-08, after a consumer sweep.\n\nThe failure that prompted this was not a library boundary breaking: every storypole_core API call site in\nbenchwork survived ADR 0009 untouched. The one site that broke spelled ledger.jsonl itself. So the deliverable\nhere is not just an accessor, it is making the wrong thing impossible:\n\n  storypole_core::state::load(dot_dir) -> Result<LoadedState>\n\none call that returns the tasks and events of a store whichever layout it uses, replacing every consumer that\ncurrently decides which file to read. benchwork's context injector becomes one line (GB-349); the same helper\nserves chalkline, joiner and outfeed, which all depend on storypole-core already and would otherwise each\nre-derive the rule.\n\nAlso offer the path accessor beside ledger() and mark ledger() as the legacy layout in its own doc comment,\nso copying it requires choosing it rather than finding it alone.\n\nWhy not a CLI/MCP boundary or a consumer sub-crate instead: benchwork is a daemon serving a UI panel, so a\nprocess spawn per task-list refresh and typed errors degrading to stderr are both real regressions; four\nrepositories already consume storypole-core in-process, so a one-consumer crate is not the shape of the problem;\nand MCP is a protocol for agents, not IPC between two of our own daemons.\n\nDONE 2026-11-08, in two commits, one per repository.\n\nstorypole (e92f032): storypole_core::state::load returns a store's tasks and events whichever layout holds them,\nplus the layout it found. One call replaces \"each consumer decides which file to read\" for benchwork, chalkline,\njoiner and outfeed. An absent store is empty rather than an error, because a panel should render nothing rather\nthan fail. Three tests: empty, records, legacy ledger.\n\ncommon (33a3235): GaugeblockPaths gained storypole_tickets() beside ledger(), and ledger() now says in its own\ncomment that it is the legacy layout and that hard-coding it reads nothing in a migrated store. Both comments\npoint at state::load as the route to prefer, so the pair documents the right answer rather than only offering\npaths.\n\nNeither commit is invoked by a consumer yet - GB-349 is the first caller.",
-    "edges": [],
     "id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
+    "ticket_key": "CO-14",
+    "slug": "gaugeblockpaths-offers-a-ledger-path-but-no-records-path-so-consumers-copy-the-wrong-filename-591e5f",
+    "title": "GaugeblockPaths offers a ledger path but no records path, so consumers copy the wrong filename",
+    "description": "GaugeblockPaths exposes ledger() - the path to .gaugeblock/storypole/ledger.jsonl - and nothing for the layout tickets now use. Consumers therefore either spell tickets/KEY.json themselves or reach for the state through a store API, and the sweep that followed ADR 0009 found one consumer (benchwork context injection) that took the first route and silently lost all data when the layout changed. Add a records-aware accessor beside ledger() (the tickets directory, and a helper that reports which layout a store is in) and mark ledger() as the legacy layout in its doc comment, so the next reader has to choose deliberately rather than copying the ledger path because it is the only one offered. Cross-repo: this is the shared helper every tool uses to find storypole state.\n\nSCOPE SHARPENED 2026-11-08, after a consumer sweep.\n\nThe failure that prompted this was not a library boundary breaking: every storypole_core API call site in\nbenchwork survived ADR 0009 untouched. The one site that broke spelled ledger.jsonl itself. So the deliverable\nhere is not just an accessor, it is making the wrong thing impossible:\n\n  storypole_core::state::load(dot_dir) -> Result<LoadedState>\n\none call that returns the tasks and events of a store whichever layout it uses, replacing every consumer that\ncurrently decides which file to read. benchwork's context injector becomes one line (GB-349); the same helper\nserves chalkline, joiner and outfeed, which all depend on storypole-core already and would otherwise each\nre-derive the rule.\n\nAlso offer the path accessor beside ledger() and mark ledger() as the legacy layout in its own doc comment,\nso copying it requires choosing it rather than finding it alone.\n\nWhy not a CLI/MCP boundary or a consumer sub-crate instead: benchwork is a daemon serving a UI panel, so a\nprocess spawn per task-list refresh and typed errors degrading to stderr are both real regressions; four\nrepositories already consume storypole-core in-process, so a one-consumer crate is not the shape of the problem;\nand MCP is a protocol for agents, not IPC between two of our own daemons.\n\nDONE 2026-11-08, in two commits, one per repository.\n\nstorypole (e92f032): storypole_core::state::load returns a store's tasks and events whichever layout holds them,\nplus the layout it found. One call replaces \"each consumer decides which file to read\" for benchwork, chalkline,\njoiner and outfeed. An absent store is empty rather than an error, because a panel should render nothing rather\nthan fail. Three tests: empty, records, legacy ledger.\n\ncommon (33a3235): GaugeblockPaths gained storypole_tickets() beside ledger(), and ledger() now says in its own\ncomment that it is the legacy layout and that hard-coding it reads nothing in a migrated store. Both comments\npoint at state::load as the route to prefer, so the pair documents the right answer rather than only offering\npaths.\n\nNeither commit is invoked by a consumer yet - GB-349 is the first caller.",
     "kind": "tech_debt",
-    "latest_handoff": null,
-    "plan": null,
+    "status": "verified",
     "priority": 2,
     "scope": {
-      "crate_name": null,
-      "labels": [],
-      "module_path": null,
       "repo": "common",
+      "crate_name": null,
+      "module_path": null,
       "target_files": [],
       "target_symbols": [
         "gaugeblock_workspace::GaugeblockPaths"
-      ]
+      ],
+      "labels": []
     },
-    "slug": "gaugeblockpaths-offers-a-ledger-path-but-no-records-path-so-consumers-copy-the-wrong-filename-591e5f",
-    "status": "verified",
-    "ticket_key": "CO-14",
-    "title": "GaugeblockPaths offers a ledger path but no records path, so consumers copy the wrong filename",
-    "updated_at_epoch_ms": 1794208348030,
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
     "verification_receipt": {
-      "base_commit_sha": null,
-      "chain_key": "common",
+      "verifier": "storypole-verify",
       "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794208348030,
+      "git_branch": "main",
+      "base_commit_sha": null,
+      "head_commit_sha": "33a3235e67dc706ab0e1af89aab8ea68e2039c10",
       "commit_shas": [
         "33a3235e67dc706ab0e1af89aab8ea68e2039c10"
       ],
-      "diagnostic_count": null,
-      "exit_code": 0,
-      "git_branch": "main",
-      "head_commit_sha": "33a3235e67dc706ab0e1af89aab8ea68e2039c10",
       "repo": "common",
-      "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
-      "verified_at_epoch_ms": 1794208348030,
-      "verifier": "storypole-verify"
+      "chain_key": "common"
+    },
+    "created_at_epoch_ms": 1794206051958,
+    "updated_at_epoch_ms": 1794208348030
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
+        "ticket_key": "CO-14",
+        "slug": "gaugeblockpaths-offers-a-ledger-path-but-no-records-path-so-consumers-copy-the-wrong-filename-591e5f",
+        "title": "GaugeblockPaths offers a ledger path but no records path, so consumers copy the wrong filename",
+        "description": "GaugeblockPaths exposes ledger() - the path to .gaugeblock/storypole/ledger.jsonl - and nothing for the layout tickets now use. Consumers therefore either spell tickets/KEY.json themselves or reach for the state through a store API, and the sweep that followed ADR 0009 found one consumer (benchwork context injection) that took the first route and silently lost all data when the layout changed. Add a records-aware accessor beside ledger() (the tickets directory, and a helper that reports which layout a store is in) and mark ledger() as the legacy layout in its doc comment, so the next reader has to choose deliberately rather than copying the ledger path because it is the only one offered. Cross-repo: this is the shared helper every tool uses to find storypole state.",
+        "kind": "tech_debt",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": "common",
+          "crate_name": null,
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "gaugeblock_workspace::GaugeblockPaths"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794206051958,
+        "updated_at_epoch_ms": 1794206051958
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_updated",
+      "task_id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
+      "title": null,
+      "description": null,
+      "priority": 2,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794206059162
+    },
+    {
+      "event": "task_updated",
+      "task_id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
+      "title": null,
+      "description": "GaugeblockPaths exposes ledger() - the path to .gaugeblock/storypole/ledger.jsonl - and nothing for the layout tickets now use. Consumers therefore either spell tickets/KEY.json themselves or reach for the state through a store API, and the sweep that followed ADR 0009 found one consumer (benchwork context injection) that took the first route and silently lost all data when the layout changed. Add a records-aware accessor beside ledger() (the tickets directory, and a helper that reports which layout a store is in) and mark ledger() as the legacy layout in its doc comment, so the next reader has to choose deliberately rather than copying the ledger path because it is the only one offered. Cross-repo: this is the shared helper every tool uses to find storypole state.\n\nSCOPE SHARPENED 2026-11-08, after a consumer sweep.\n\nThe failure that prompted this was not a library boundary breaking: every storypole_core API call site in\nbenchwork survived ADR 0009 untouched. The one site that broke spelled ledger.jsonl itself. So the deliverable\nhere is not just an accessor, it is making the wrong thing impossible:\n\n  storypole_core::state::load(dot_dir) -> Result<LoadedState>\n\none call that returns the tasks and events of a store whichever layout it uses, replacing every consumer that\ncurrently decides which file to read. benchwork's context injector becomes one line (GB-349); the same helper\nserves chalkline, joiner and outfeed, which all depend on storypole-core already and would otherwise each\nre-derive the rule.\n\nAlso offer the path accessor beside ledger() and mark ledger() as the legacy layout in its own doc comment,\nso copying it requires choosing it rather than finding it alone.\n\nWhy not a CLI/MCP boundary or a consumer sub-crate instead: benchwork is a daemon serving a UI panel, so a\nprocess spawn per task-list refresh and typed errors degrading to stderr are both real regressions; four\nrepositories already consume storypole-core in-process, so a one-consumer crate is not the shape of the problem;\nand MCP is a protocol for agents, not IPC between two of our own daemons.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794206740930
+    },
+    {
+      "event": "task_updated",
+      "task_id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
+      "title": null,
+      "description": "GaugeblockPaths exposes ledger() - the path to .gaugeblock/storypole/ledger.jsonl - and nothing for the layout tickets now use. Consumers therefore either spell tickets/KEY.json themselves or reach for the state through a store API, and the sweep that followed ADR 0009 found one consumer (benchwork context injection) that took the first route and silently lost all data when the layout changed. Add a records-aware accessor beside ledger() (the tickets directory, and a helper that reports which layout a store is in) and mark ledger() as the legacy layout in its doc comment, so the next reader has to choose deliberately rather than copying the ledger path because it is the only one offered. Cross-repo: this is the shared helper every tool uses to find storypole state.\n\nSCOPE SHARPENED 2026-11-08, after a consumer sweep.\n\nThe failure that prompted this was not a library boundary breaking: every storypole_core API call site in\nbenchwork survived ADR 0009 untouched. The one site that broke spelled ledger.jsonl itself. So the deliverable\nhere is not just an accessor, it is making the wrong thing impossible:\n\n  storypole_core::state::load(dot_dir) -> Result<LoadedState>\n\none call that returns the tasks and events of a store whichever layout it uses, replacing every consumer that\ncurrently decides which file to read. benchwork's context injector becomes one line (GB-349); the same helper\nserves chalkline, joiner and outfeed, which all depend on storypole-core already and would otherwise each\nre-derive the rule.\n\nAlso offer the path accessor beside ledger() and mark ledger() as the legacy layout in its own doc comment,\nso copying it requires choosing it rather than finding it alone.\n\nWhy not a CLI/MCP boundary or a consumer sub-crate instead: benchwork is a daemon serving a UI panel, so a\nprocess spawn per task-list refresh and typed errors degrading to stderr are both real regressions; four\nrepositories already consume storypole-core in-process, so a one-consumer crate is not the shape of the problem;\nand MCP is a protocol for agents, not IPC between two of our own daemons.\n\nDONE 2026-11-08, in two commits, one per repository.\n\nstorypole (e92f032): storypole_core::state::load returns a store's tasks and events whichever layout holds them,\nplus the layout it found. One call replaces \"each consumer decides which file to read\" for benchwork, chalkline,\njoiner and outfeed. An absent store is empty rather than an error, because a panel should render nothing rather\nthan fail. Three tests: empty, records, legacy ledger.\n\ncommon (33a3235): GaugeblockPaths gained storypole_tickets() beside ledger(), and ledger() now says in its own\ncomment that it is the legacy layout and that hard-coding it reads nothing in a migrated store. Both comments\npoint at state::load as the route to prefer, so the pair documents the right answer rather than only offering\npaths.\n\nNeither commit is invoked by a consumer yet - GB-349 is the first caller.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794208347861
+    },
+    {
+      "event": "task_verified",
+      "task_id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
+      "receipt": {
+        "verifier": "storypole-verify",
+        "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+        "exit_code": 0,
+        "diagnostic_count": null,
+        "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+        "verified_at_epoch_ms": 1794208348030,
+        "git_branch": "main",
+        "base_commit_sha": null,
+        "head_commit_sha": "33a3235e67dc706ab0e1af89aab8ea68e2039c10",
+        "commit_shas": [
+          "33a3235e67dc706ab0e1af89aab8ea68e2039c10"
+        ],
+        "repo": "common",
+        "chain_key": "common"
+      }
+    },
+    {
+      "event": "task_archived",
+      "task_id": "591e5fa7-aafd-4ad6-a9cc-f354a74ab931",
+      "status": "verified",
+      "timestamp_ms": 1794343395743
     }
-  }
+  ]
 }
