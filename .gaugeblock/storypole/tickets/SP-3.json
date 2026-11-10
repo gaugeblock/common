@@ -1,0 +1,77 @@
+{
+  "ticket": {
+    "id": "141965f2-3ccb-425c-833b-5df37022d846",
+    "ticket_key": "SP-3",
+    "slug": "config-check-reads-the-config-file-and-does-not-inherit-the-suite-chain-141965",
+    "title": "config check reads the config file and does not inherit the suite chain",
+    "description": "",
+    "kind": "bug",
+    "status": "triage",
+    "priority": 3,
+    "scope": {
+      "repo": null,
+      "crate_name": null,
+      "module_path": null,
+      "target_files": [],
+      "target_symbols": [
+        "storypole_core::config_audit"
+      ],
+      "labels": []
+    },
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794271999503,
+    "updated_at_epoch_ms": 1794271999503
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "141965f2-3ccb-425c-833b-5df37022d846",
+        "ticket_key": "SP-3",
+        "slug": "config-check-reads-the-config-file-and-does-not-inherit-the-suite-chain-141965",
+        "title": "config check reads the config file and does not inherit the suite chain",
+        "description": "",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": null,
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::config_audit"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794271999503,
+        "updated_at_epoch_ms": 1794271999503
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_updated",
+      "task_id": "141965f2-3ccb-425c-833b-5df37022d846",
+      "title": null,
+      "description": "Found while proving SP-1 on 2026-11-08. `storypole config check` run inside `common/` prints:\n\n  warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is now false. `storypole verify` in the same directory records `chain_key: common` and verifier `storypole-verify`,\nbecause the store inherits the suite's chains (b3fa899). The audit reads the config FILE directly, so it sees the empty\nlocal list and warns about a fallback that no longer happens.\n\nTwo readers of one setting, disagreeing. A user who runs `config check` will open or duplicate a chain they already have;\na user who trusts `verify` will think the audit is broken. Nothing is lying loudly - this is the same quiet shape as SP-1\nitself, one layer up.\n\nCHOOSE ONE, deliberately:\n  (a) the audit reports the EFFECTIVE configuration and says where the chains came from, e.g. \"inherited from suite\n      root /path/.gaugeblock/config.toml\"; or\n  (b) the audit describes itself as reporting the file, and stops claiming the verifier will fall back.\n\n(a) is better because the audit's purpose is to tell someone what will happen when they verify. But it must name the\nsource, or it becomes the third place where the answer to \"which config am I looking at\" is ambiguous.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794272006014
+    }
+  ]
+}
