@@ -107,6 +107,26 @@ pub struct VerificationReceipt {
     /// commands must not read the same (`GB-316`).
     #[serde(default)]
     pub chain_key: Option<String>,
+    /// Content hash of the change this receipt verified (`SP-41`).
+    ///
+    /// A window of SHAs can be orphaned by a rebase, a squash or a force-push, which turns the record
+    /// into a dangling pointer - the suite already had 44 edges whose target no longer resolved. The
+    /// hash is content, not position, so it survives the rewrite and still identifies what was certified.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diff_hash: Option<String>,
+    /// The diff itself, capped, so the change can be read without a checkout at an exact SHA (`SP-41`).
+    ///
+    /// Capped rather than unconditional: a receipt is written into a ticket record and replayed from a
+    /// ledger, and an unbounded diff would make every read pay for one large change. Truncation is
+    /// marked in the text, so a short diff that was cut is never mistaken for a complete one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub diff: Option<String>,
+    /// Whether both ends of the recorded window still exist in the repository (`SP-41`).
+    ///
+    /// `None` when git could not answer. `Some(false)` means the window has been orphaned and the
+    /// receipt is now the only record of what it certified - reported rather than passed over.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window_intact: Option<bool>,
 }
 
 impl AgentClaim {

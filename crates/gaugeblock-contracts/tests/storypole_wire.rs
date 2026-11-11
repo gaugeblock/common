@@ -79,6 +79,11 @@ fn sample_task() -> TaskNode {
             commit_shas: vec!["dd42b57".to_string()],
             repo: None,
             chain_key: None,
+            // The wire fixture carries no captured change: the fields are optional so an older receipt
+            // deserialises, and this fixture is the older shape (`SP-41`).
+            diff_hash: None,
+            diff: None,
+            window_intact: None,
         }),
         created_at_epoch_ms: 1,
         updated_at_epoch_ms: 5,
