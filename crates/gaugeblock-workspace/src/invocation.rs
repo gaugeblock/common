@@ -62,6 +62,22 @@ pub fn sink_path(start: &Path) -> Option<PathBuf> {
         .map(|paths| paths.telemetry_events())
 }
 
+/// Hands a claim to a command this process is about to spawn (`GB-356`).
+///
+/// The pair is set together and only here, because the two halves are a single fact: a key with no lease, or a
+/// lease with no key, is exactly the half-attributed state the rules in [`crate::task_keys`] refuse. A spawner
+/// that knows the claim - `storypole verify`, `outfeed gate` - calls this instead of setting variables by hand,
+/// so the encoding cannot drift between producers.
+///
+/// `expires_at_ms` comes from the claim's lease. Passing a value already in the past is allowed and attributes
+/// nothing, which is the correct outcome: the work outlived the claim that would have justified crediting it.
+pub fn export_claim(command: &mut std::process::Command, task_key: &str, expires_at_ms: u64) {
+    command.env(crate::task_keys::TASK_KEY_ENV, task_key).env(
+        crate::task_keys::TASK_EXPIRES_ENV,
+        expires_at_ms.to_string(),
+    );
+}
+
 /// An invocation in flight, written when it finishes or is dropped.
 #[derive(Debug)]
 pub struct InvocationSpan {
@@ -75,7 +91,12 @@ impl InvocationSpan {
     /// operations that happen to share an executable.
     #[must_use]
     pub fn start(binary: &str, command: Option<&str>) -> Self {
-        Self::start_attributed(binary, command, None)
+        // The ambient claim, if a spawner handed one over (`GB-356`). Read here rather than passed by each tool
+        // so that a tool does not have to know attribution exists to be attributable - and so that no tool
+        // invents its own rule for when a key is trustworthy.
+        let cwd = std::env::current_dir().unwrap_or_default();
+        let task = crate::task_keys::ambient(&cwd);
+        Self::start_attributed(binary, command, task.key())
     }
 
     /// Opens a span that also names the ticket the work belongs to (`GB-356`).

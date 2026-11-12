@@ -14,10 +14,11 @@ mod invocation;
 mod membership;
 mod paths;
 mod suite_config;
+pub mod task_keys;
 mod telemetry;
 mod topology;
 
-pub use invocation::{InvocationSpan, outbox_path, sink_path};
+pub use invocation::{InvocationSpan, export_claim, outbox_path, sink_path};
 pub use paths::GaugeblockPaths;
 pub use suite_config::{SuiteConfig, env_credentials};
 pub use telemetry::{
