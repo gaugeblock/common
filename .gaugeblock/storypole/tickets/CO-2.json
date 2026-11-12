@@ -4,9 +4,9 @@
     "ticket_key": "CO-2",
     "slug": "add-telemetry-enabled-with-env-wins-precedence-b4f26d",
     "title": "Add [telemetry] enabled with env-wins precedence",
-    "description": "ADR 0012 decided telemetry is switched off at runtime, with precedence env -> config -> default(true). The env half exists (GAUGEBLOCK_NO_TELEMETRY, BW-33); this is the config half.\n\nAdd [telemetry] with an `enabled` key to .gaugeblock/config.toml and consult it in gaugeblock_workspace::telemetry::emission_enabled, so the check stays in the one choke point every emitter already goes through rather than being repeated per tool.\n\nWHY THIS AND NOT A CARGO FEATURE, restated because it will be asked again: cargo features are additive. A downstream crate cannot switch one off - default-features = false only declines what the consumer would have enabled, and any other crate in the graph re-enables it. So a feature gate would look like an opt-out for exactly the case that motivates it (someone installing one tool) and would not be one. It would also save nothing: spans are contract types (ADR 0002), so uuid, serde and serde_json are already in the graph.\n\nDEFAULT true, deliberately. The honest cost is a directory a panel-less user never reads, bounded by rotation (GB-341); the honest benefit is that first_diagnostic records what failed on a lone tool with no benchwork installed, which is a real use the panel does not cover.\n\nTESTS: config false disables emission; env set disables emission even when config says true (precedence); absent config or absent key means enabled; and emission_enabled stays false in a test binary regardless of config, since BW-33 established that a test must not write the production log.\n\nDEPENDS: CO-11 gives the writer one location, so the config is read from the same place it writes.",
+    "description": "ADR 0012 decided telemetry is switched off at runtime, with precedence env -> config -> default(true). The env half exists (GAUGEBLOCK_NO_TELEMETRY, BW-33); this is the config half.\n\nAdd [telemetry] with an `enabled` key to .gaugeblock/config.toml and consult it in gaugeblock_workspace::telemetry::emission_enabled, so the check stays in the one choke point every emitter already goes through rather than being repeated per tool.\n\nWHY THIS AND NOT A CARGO FEATURE, restated because it will be asked again: cargo features are additive. A downstream crate cannot switch one off - default-features = false only declines what the consumer would have enabled, and any other crate in the graph re-enables it. So a feature gate would look like an opt-out for exactly the case that motivates it (someone installing one tool) and would not be one. It would also save nothing: spans are contract types (ADR 0002), so uuid, serde and serde_json are already in the graph.\n\nDEFAULT true, deliberately. The honest cost is a directory a panel-less user never reads, bounded by rotation (GB-341); the honest benefit is that first_diagnostic records what failed on a lone tool with no benchwork installed, which is a real use the panel does not cover.\n\nTESTS: config false disables emission; env set disables emission even when config says true (precedence); absent config or absent key means enabled; and emission_enabled stays false in a test binary regardless of config, since BW-33 established that a test must not write the production log.\n\nDEPENDS: CO-11 gives the writer one location, so the config is read from the same place it writes.\n\nDONE 2026-11-08, and it uncovered a larger defect than the ticket described.\n\nThe switch itself: precedence is env -> `[telemetry] enabled` in `.gaugeblock/config.toml` -> default true. Config read\nadded as `SuiteConfig::boolean` returning Option<bool>, so absence is not false. `emission_enabled()` now composes\nthree conditions and the policy moved to its own module when telemetry.rs crossed 250 lines (3d9a856).\n\nTHE DEFECT: with `enabled = false` the log still grew. `SpanGuard::open` takes a path and writes, and\n`InvocationSpan::start` called it directly, so the entire emission policy was inert on the only production path. That\nincludes GAUGEBLOCK_NO_TELEMETRY, which was documented as an opt-out and ignored by exactly the spans the suite is\nobserved through. The earlier test-binary proof was against sawhorse's own writer, not this one, which is why nothing\ncaught it. Fixed in a26f738 by consulting the policy at the entry point.\n\nPROVEN, three runs against an installed binary:\n  enabled = false          -> log unchanged (38 -> 38)\n  enabled = true           -> log grew     (38 -> 39)\n  GAUGEBLOCK_NO_TELEMETRY  -> log unchanged (39 -> 39)\n\nWHY THIS WAS MISSED: the unit test proved the config parser, and the config parser worked. Nothing tested that opening\na span consults the policy at all. A feature that is correctly implemented and never called looks identical to one\nthat is called and broken, until something is run.\n\nREGRESSION CHECKED 2026-11-08, after every other change of the day (the policy split, the entry-point guard, the chain\ninheritance and the audit fix all touched the same crate):\n\n  [telemetry] enabled = true   -> storypole list + chalkline docs check grew the log 86 -> 88, both spans carrying\n                                  binary, command, repo, branch, status and duration\n  [telemetry] enabled = false  -> the same two commands left the log at 88\n\nSo the switch does both jobs it was asked to do, and did not become a one-way valve while the surrounding code moved.\nThe config was left at `enabled = true`.\n\nWorth doing because the guard now sits at the entry point of every span in the suite, and a bug there would have been\nsilent in the most expensive way: commands would run correctly, exit zero, and leave no record that they had - which is\nindistinguishable from telemetry that was never wired, the exact ambiguity this epic spent its length removing.",
     "kind": "feature",
-    "status": "deferred",
+    "status": "verified",
     "priority": 3,
     "scope": {
       "repo": "common",
@@ -24,9 +24,25 @@
     "plan": null,
     "active_claim": null,
     "latest_handoff": null,
-    "verification_receipt": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify",
+      "command": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets -- -D warnings && cargo nextest run --workspace && miter audit --path . --threshold 250 --paths && chalkline docs check -d .",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\nAUDIT PASSED: No files exceed 250 lines in .\nAUDIT PASSED: every crate naming .gaugeblock depends on gaugeblock-workspace\nAUDIT PASSED: every crate resolving the suite has a multi-repository test\n\n=== Gaugeblock 9-Document Architecture Audit ===\nRepository: /Users/wolff/dev2026/neurosymbolic-suite/common/.\n\n[OK]      Readme           (README.md)\n[OK]      Contributing     (CONTRIBUTING.md)\n[OK]      Product          (docs/PRODUCT.md)\n[OK]      Architecture     (docs/ARCHITECTURE.md)\n[OK]      Spec             (docs/SPEC.md)\n[OK]      Design           (docs/DESIGN.md)\n[OK]      Roadmap          (docs/ROADMAP.md)\n[OK]      Changelog        (CHANGELOG.md)\n[OK]      Agents           (AGENTS.md)\n\nSummary: 9 present, 0 missing, 0 drifted\n\n",
+      "verified_at_epoch_ms": 1794431140706,
+      "git_branch": "main",
+      "base_commit_sha": null,
+      "head_commit_sha": "04352b8f1d236fad3c5cae8ad2b29815fcb8479f",
+      "commit_shas": [
+        "04352b8f1d236fad3c5cae8ad2b29815fcb8479f"
+      ],
+      "repo": "common",
+      "chain_key": "common"
+    },
     "created_at_epoch_ms": 1794251058799,
-    "updated_at_epoch_ms": 1794251058799
+    "updated_at_epoch_ms": 1794431177386,
+    "archived_at_epoch_ms": 1794431177386
   },
   "events": [
     {

@@ -1,97 +1,97 @@
 {
-  "events": [
-    {
-      "captured_by_agent": "user",
-      "discovered_from_task_id": null,
-      "event": "deferred_item_captured",
-      "task": {
-        "acceptance_criteria": [],
-        "active_claim": null,
-        "created_at_epoch_ms": 1794271999503,
-        "decisions": [],
-        "description": "",
-        "edges": [],
-        "id": "141965f2-3ccb-425c-833b-5df37022d846",
-        "kind": "bug",
-        "latest_handoff": null,
-        "plan": null,
-        "priority": 3,
-        "scope": {
-          "crate_name": null,
-          "labels": [],
-          "module_path": null,
-          "repo": null,
-          "target_files": [],
-          "target_symbols": [
-            "storypole_core::config_audit"
-          ]
-        },
-        "slug": "config-check-reads-the-config-file-and-does-not-inherit-the-suite-chain-141965",
-        "status": "triage",
-        "ticket_key": "CO-3",
-        "title": "config check reads the config file and does not inherit the suite chain",
-        "updated_at_epoch_ms": 1794271999503,
-        "verification_receipt": null
-      }
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "Found while proving CO-1 on 2026-11-08. `storypole config check` run inside `common/` prints:\n\n  warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is now false. `storypole verify` in the same directory records `chain_key: common` and verifier `storypole-verify`,\nbecause the store inherits the suite's chains (b3fa899). The audit reads the config FILE directly, so it sees the empty\nlocal list and warns about a fallback that no longer happens.\n\nTwo readers of one setting, disagreeing. A user who runs `config check` will open or duplicate a chain they already have;\na user who trusts `verify` will think the audit is broken. Nothing is lying loudly - this is the same quiet shape as CO-1\nitself, one layer up.\n\nCHOOSE ONE, deliberately:\n  (a) the audit reports the EFFECTIVE configuration and says where the chains came from, e.g. \"inherited from suite\n      root /path/.gaugeblock/config.toml\"; or\n  (b) the audit describes itself as reporting the file, and stops claiming the verifier will fall back.\n\n(a) is better because the audit's purpose is to tell someone what will happen when they verify. But it must name the\nsource, or it becomes the third place where the answer to \"which config am I looking at\" is ambiguous.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "141965f2-3ccb-425c-833b-5df37022d846",
-      "timestamp_ms": 1794272006014,
-      "title": null
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "Found while proving CO-1 on 2026-11-08. `storypole config check` run inside `common/` prints:\n\n  warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is now false. `storypole verify` in the same directory records `chain_key: common` and verifier `storypole-verify`,\nbecause the store inherits the suite's chains (b3fa899). The audit reads the config FILE directly, so it sees the empty\nlocal list and warns about a fallback that no longer happens.\n\nTwo readers of one setting, disagreeing. A user who runs `config check` will open or duplicate a chain they already have;\na user who trusts `verify` will think the audit is broken. Nothing is lying loudly - this is the same quiet shape as CO-1\nitself, one layer up.\n\nCHOOSE ONE, deliberately:\n  (a) the audit reports the EFFECTIVE configuration and says where the chains came from, e.g. \"inherited from suite\n      root /path/.gaugeblock/config.toml\"; or\n  (b) the audit describes itself as reporting the file, and stops claiming the verifier will fall back.\n\n(a) is better because the audit's purpose is to tell someone what will happen when they verify. But it must name the\nsource, or it becomes the third place where the answer to \"which config am I looking at\" is ambiguous.\n\nCORRECTED 2026-11-08, same day, and narrower than filed. The single-repo path is NOT broken: `storypole config check`\nrun inside common/ now reports \"1 repositories audited, 0 finding(s)\" because it goes through `store.config()`, and the\nstore inherits the suite's chains since b3fa899. My original observation was made with a binary built before that fix,\nso I filed against stale behaviour - the second time this session I have done that (the first was CO-12, the shared\ntarget directory, which was withdrawn for the same reason).\n\nWHAT IS ACTUALLY STILL WRONG, one code path narrower: `storypole config check --workspace` audits each member from its\nraw file. `check_workspace` in config_cmds.rs loads every member through `StorypoleConfig::load_unified_or_legacy`\n(line 46) rather than opening a store, so it reports:\n\n  common: warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is false for the same reason as before: verify in common/ records chain_key common. The audit is right about the\nfile and wrong about the outcome.\n\nThe reason that path reads raw is documented in the same function and still valid - an audit must not create index\nfiles in repositories it merely inspects, which is why it avoids opening stores. So the fix is not to open stores; it is\nto apply the same inheritance to the file read, and to say so in the output: \"satisfied by chains inherited from the\nsuite root\" rather than silence when the finding is suppressed.\n\nSCOPE NOW: one function, one output line, and the honesty that an audit reporting a file should not describe what the\nverifier will do with it.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "141965f2-3ccb-425c-833b-5df37022d846",
-      "timestamp_ms": 1794272088395,
-      "title": null
-    },
-    {
-      "acceptance_criteria": null,
-      "description": "Found while proving CO-1 on 2026-11-08. `storypole config check` run inside `common/` prints:\n\n  warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is now false. `storypole verify` in the same directory records `chain_key: common` and verifier `storypole-verify`,\nbecause the store inherits the suite's chains (b3fa899). The audit reads the config FILE directly, so it sees the empty\nlocal list and warns about a fallback that no longer happens.\n\nTwo readers of one setting, disagreeing. A user who runs `config check` will open or duplicate a chain they already have;\na user who trusts `verify` will think the audit is broken. Nothing is lying loudly - this is the same quiet shape as CO-1\nitself, one layer up.\n\nCHOOSE ONE, deliberately:\n  (a) the audit reports the EFFECTIVE configuration and says where the chains came from, e.g. \"inherited from suite\n      root /path/.gaugeblock/config.toml\"; or\n  (b) the audit describes itself as reporting the file, and stops claiming the verifier will fall back.\n\n(a) is better because the audit's purpose is to tell someone what will happen when they verify. But it must name the\nsource, or it becomes the third place where the answer to \"which config am I looking at\" is ambiguous.\n\nCORRECTED 2026-11-08, same day, and narrower than filed. The single-repo path is NOT broken: `storypole config check`\nrun inside common/ now reports \"1 repositories audited, 0 finding(s)\" because it goes through `store.config()`, and the\nstore inherits the suite's chains since b3fa899. My original observation was made with a binary built before that fix,\nso I filed against stale behaviour - the second time this session I have done that (the first was CO-12, the shared\ntarget directory, which was withdrawn for the same reason).\n\nWHAT IS ACTUALLY STILL WRONG, one code path narrower: `storypole config check --workspace` audits each member from its\nraw file. `check_workspace` in config_cmds.rs loads every member through `StorypoleConfig::load_unified_or_legacy`\n(line 46) rather than opening a store, so it reports:\n\n  common: warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is false for the same reason as before: verify in common/ records chain_key common. The audit is right about the\nfile and wrong about the outcome.\n\nThe reason that path reads raw is documented in the same function and still valid - an audit must not create index\nfiles in repositories it merely inspects, which is why it avoids opening stores. So the fix is not to open stores; it is\nto apply the same inheritance to the file read, and to say so in the output: \"satisfied by chains inherited from the\nsuite root\" rather than silence when the finding is suppressed.\n\nSCOPE NOW: one function, one output line, and the honesty that an audit reporting a file should not describe what the\nverifier will do with it.\n\nFIXED AND PROVEN 2026-11-08 (ca3ce90). The workspace audit applies the same inheritance `verify` does, and names it:\n\n  before: common: warning: verification_commands is empty ... falls back to `cargo test`    (1 finding)\n  after:  note: common declares no verification chains of its own; it uses the suite root's, as does `storypole verify`\n          11 repositories audited, 0 finding(s), 0 error(s)\n\nThe audit still reads files rather than opening stores, for the reason its own comment gives - it must not leave index\nfiles in repositories it merely inspects - so the fix was to inherit on the read, not to change how it reads.\n\nA suppressed finding is named rather than silenced. That was the whole complaint: two readers of one setting disagreed,\nand the one reporting the file described what the other would do with it.",
-      "event": "task_updated",
-      "priority": null,
-      "scope": null,
-      "task_id": "141965f2-3ccb-425c-833b-5df37022d846",
-      "timestamp_ms": 1794275392401,
-      "title": null
-    }
-  ],
   "ticket": {
-    "acceptance_criteria": [],
-    "active_claim": null,
-    "created_at_epoch_ms": 1794271999503,
-    "decisions": [],
-    "description": "",
-    "edges": [],
     "id": "141965f2-3ccb-425c-833b-5df37022d846",
+    "ticket_key": "CO-3",
+    "slug": "config-check-reads-the-config-file-and-does-not-inherit-the-suite-chain-141965",
+    "title": "config check reads the config file and does not inherit the suite chain",
+    "description": "Found while proving CO-1 on 2026-11-08. `storypole config check` run inside `common/` prints:\n\n  warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is now false. `storypole verify` in the same directory records `chain_key: common` and verifier `storypole-verify`,\nbecause the store inherits the suite's chains (b3fa899). The audit reads the config FILE directly, so it sees the empty\nlocal list and warns about a fallback that no longer happens.\n\nTwo readers of one setting, disagreeing. A user who runs `config check` will open or duplicate a chain they already have;\na user who trusts `verify` will think the audit is broken. Nothing is lying loudly - this is the same quiet shape as CO-1\nitself, one layer up.\n\nCHOOSE ONE, deliberately:\n  (a) the audit reports the EFFECTIVE configuration and says where the chains came from, e.g. \"inherited from suite\n      root /path/.gaugeblock/config.toml\"; or\n  (b) the audit describes itself as reporting the file, and stops claiming the verifier will fall back.\n\n(a) is better because the audit's purpose is to tell someone what will happen when they verify. But it must name the\nsource, or it becomes the third place where the answer to \"which config am I looking at\" is ambiguous.\n\nCORRECTED 2026-11-08, same day, and narrower than filed. The single-repo path is NOT broken: `storypole config check`\nrun inside common/ now reports \"1 repositories audited, 0 finding(s)\" because it goes through `store.config()`, and the\nstore inherits the suite's chains since b3fa899. My original observation was made with a binary built before that fix,\nso I filed against stale behaviour - the second time this session I have done that (the first was CO-12, the shared\ntarget directory, which was withdrawn for the same reason).\n\nWHAT IS ACTUALLY STILL WRONG, one code path narrower: `storypole config check --workspace` audits each member from its\nraw file. `check_workspace` in config_cmds.rs loads every member through `StorypoleConfig::load_unified_or_legacy`\n(line 46) rather than opening a store, so it reports:\n\n  common: warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is false for the same reason as before: verify in common/ records chain_key common. The audit is right about the\nfile and wrong about the outcome.\n\nThe reason that path reads raw is documented in the same function and still valid - an audit must not create index\nfiles in repositories it merely inspects, which is why it avoids opening stores. So the fix is not to open stores; it is\nto apply the same inheritance to the file read, and to say so in the output: \"satisfied by chains inherited from the\nsuite root\" rather than silence when the finding is suppressed.\n\nSCOPE NOW: one function, one output line, and the honesty that an audit reporting a file should not describe what the\nverifier will do with it.\n\nFIXED AND PROVEN 2026-11-08 (ca3ce90). The workspace audit applies the same inheritance `verify` does, and names it:\n\n  before: common: warning: verification_commands is empty ... falls back to `cargo test`    (1 finding)\n  after:  note: common declares no verification chains of its own; it uses the suite root's, as does `storypole verify`\n          11 repositories audited, 0 finding(s), 0 error(s)\n\nThe audit still reads files rather than opening stores, for the reason its own comment gives - it must not leave index\nfiles in repositories it merely inspects - so the fix was to inherit on the read, not to change how it reads.\n\nA suppressed finding is named rather than silenced. That was the whole complaint: two readers of one setting disagreed,\nand the one reporting the file described what the other would do with it.",
     "kind": "bug",
-    "latest_handoff": null,
-    "plan": null,
+    "status": "triage",
     "priority": 3,
     "scope": {
-      "crate_name": null,
-      "labels": [],
-      "module_path": null,
       "repo": null,
+      "crate_name": null,
+      "module_path": null,
       "target_files": [],
       "target_symbols": [
         "storypole_core::config_audit"
-      ]
+      ],
+      "labels": []
     },
-    "slug": "config-check-reads-the-config-file-and-does-not-inherit-the-suite-chain-141965",
-    "status": "triage",
-    "ticket_key": "CO-3",
-    "title": "config check reads the config file and does not inherit the suite chain",
-    "updated_at_epoch_ms": 1794271999503,
-    "verification_receipt": null
-  }
+    "edges": [],
+    "decisions": [],
+    "acceptance_criteria": [],
+    "plan": null,
+    "active_claim": null,
+    "latest_handoff": null,
+    "verification_receipt": null,
+    "created_at_epoch_ms": 1794271999503,
+    "updated_at_epoch_ms": 1794275392401
+  },
+  "events": [
+    {
+      "event": "deferred_item_captured",
+      "task": {
+        "id": "141965f2-3ccb-425c-833b-5df37022d846",
+        "ticket_key": "CO-3",
+        "slug": "config-check-reads-the-config-file-and-does-not-inherit-the-suite-chain-141965",
+        "title": "config check reads the config file and does not inherit the suite chain",
+        "description": "",
+        "kind": "bug",
+        "status": "triage",
+        "priority": 3,
+        "scope": {
+          "repo": null,
+          "crate_name": null,
+          "module_path": null,
+          "target_files": [],
+          "target_symbols": [
+            "storypole_core::config_audit"
+          ],
+          "labels": []
+        },
+        "edges": [],
+        "decisions": [],
+        "acceptance_criteria": [],
+        "plan": null,
+        "active_claim": null,
+        "latest_handoff": null,
+        "verification_receipt": null,
+        "created_at_epoch_ms": 1794271999503,
+        "updated_at_epoch_ms": 1794271999503
+      },
+      "captured_by_agent": "user",
+      "discovered_from_task_id": null
+    },
+    {
+      "event": "task_updated",
+      "task_id": "141965f2-3ccb-425c-833b-5df37022d846",
+      "title": null,
+      "description": "Found while proving CO-1 on 2026-11-08. `storypole config check` run inside `common/` prints:\n\n  warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is now false. `storypole verify` in the same directory records `chain_key: common` and verifier `storypole-verify`,\nbecause the store inherits the suite's chains (b3fa899). The audit reads the config FILE directly, so it sees the empty\nlocal list and warns about a fallback that no longer happens.\n\nTwo readers of one setting, disagreeing. A user who runs `config check` will open or duplicate a chain they already have;\na user who trusts `verify` will think the audit is broken. Nothing is lying loudly - this is the same quiet shape as CO-1\nitself, one layer up.\n\nCHOOSE ONE, deliberately:\n  (a) the audit reports the EFFECTIVE configuration and says where the chains came from, e.g. \"inherited from suite\n      root /path/.gaugeblock/config.toml\"; or\n  (b) the audit describes itself as reporting the file, and stops claiming the verifier will fall back.\n\n(a) is better because the audit's purpose is to tell someone what will happen when they verify. But it must name the\nsource, or it becomes the third place where the answer to \"which config am I looking at\" is ambiguous.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794272006014
+    },
+    {
+      "event": "task_updated",
+      "task_id": "141965f2-3ccb-425c-833b-5df37022d846",
+      "title": null,
+      "description": "Found while proving CO-1 on 2026-11-08. `storypole config check` run inside `common/` prints:\n\n  warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is now false. `storypole verify` in the same directory records `chain_key: common` and verifier `storypole-verify`,\nbecause the store inherits the suite's chains (b3fa899). The audit reads the config FILE directly, so it sees the empty\nlocal list and warns about a fallback that no longer happens.\n\nTwo readers of one setting, disagreeing. A user who runs `config check` will open or duplicate a chain they already have;\na user who trusts `verify` will think the audit is broken. Nothing is lying loudly - this is the same quiet shape as CO-1\nitself, one layer up.\n\nCHOOSE ONE, deliberately:\n  (a) the audit reports the EFFECTIVE configuration and says where the chains came from, e.g. \"inherited from suite\n      root /path/.gaugeblock/config.toml\"; or\n  (b) the audit describes itself as reporting the file, and stops claiming the verifier will fall back.\n\n(a) is better because the audit's purpose is to tell someone what will happen when they verify. But it must name the\nsource, or it becomes the third place where the answer to \"which config am I looking at\" is ambiguous.\n\nCORRECTED 2026-11-08, same day, and narrower than filed. The single-repo path is NOT broken: `storypole config check`\nrun inside common/ now reports \"1 repositories audited, 0 finding(s)\" because it goes through `store.config()`, and the\nstore inherits the suite's chains since b3fa899. My original observation was made with a binary built before that fix,\nso I filed against stale behaviour - the second time this session I have done that (the first was CO-12, the shared\ntarget directory, which was withdrawn for the same reason).\n\nWHAT IS ACTUALLY STILL WRONG, one code path narrower: `storypole config check --workspace` audits each member from its\nraw file. `check_workspace` in config_cmds.rs loads every member through `StorypoleConfig::load_unified_or_legacy`\n(line 46) rather than opening a store, so it reports:\n\n  common: warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is false for the same reason as before: verify in common/ records chain_key common. The audit is right about the\nfile and wrong about the outcome.\n\nThe reason that path reads raw is documented in the same function and still valid - an audit must not create index\nfiles in repositories it merely inspects, which is why it avoids opening stores. So the fix is not to open stores; it is\nto apply the same inheritance to the file read, and to say so in the output: \"satisfied by chains inherited from the\nsuite root\" rather than silence when the finding is suppressed.\n\nSCOPE NOW: one function, one output line, and the honesty that an audit reporting a file should not describe what the\nverifier will do with it.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794272088395
+    },
+    {
+      "event": "task_updated",
+      "task_id": "141965f2-3ccb-425c-833b-5df37022d846",
+      "title": null,
+      "description": "Found while proving CO-1 on 2026-11-08. `storypole config check` run inside `common/` prints:\n\n  warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is now false. `storypole verify` in the same directory records `chain_key: common` and verifier `storypole-verify`,\nbecause the store inherits the suite's chains (b3fa899). The audit reads the config FILE directly, so it sees the empty\nlocal list and warns about a fallback that no longer happens.\n\nTwo readers of one setting, disagreeing. A user who runs `config check` will open or duplicate a chain they already have;\na user who trusts `verify` will think the audit is broken. Nothing is lying loudly - this is the same quiet shape as CO-1\nitself, one layer up.\n\nCHOOSE ONE, deliberately:\n  (a) the audit reports the EFFECTIVE configuration and says where the chains came from, e.g. \"inherited from suite\n      root /path/.gaugeblock/config.toml\"; or\n  (b) the audit describes itself as reporting the file, and stops claiming the verifier will fall back.\n\n(a) is better because the audit's purpose is to tell someone what will happen when they verify. But it must name the\nsource, or it becomes the third place where the answer to \"which config am I looking at\" is ambiguous.\n\nCORRECTED 2026-11-08, same day, and narrower than filed. The single-repo path is NOT broken: `storypole config check`\nrun inside common/ now reports \"1 repositories audited, 0 finding(s)\" because it goes through `store.config()`, and the\nstore inherits the suite's chains since b3fa899. My original observation was made with a binary built before that fix,\nso I filed against stale behaviour - the second time this session I have done that (the first was CO-12, the shared\ntarget directory, which was withdrawn for the same reason).\n\nWHAT IS ACTUALLY STILL WRONG, one code path narrower: `storypole config check --workspace` audits each member from its\nraw file. `check_workspace` in config_cmds.rs loads every member through `StorypoleConfig::load_unified_or_legacy`\n(line 46) rather than opening a store, so it reports:\n\n  common: warning: verification_commands is empty, so `storypole verify` falls back to `cargo test`\n\nThat is false for the same reason as before: verify in common/ records chain_key common. The audit is right about the\nfile and wrong about the outcome.\n\nThe reason that path reads raw is documented in the same function and still valid - an audit must not create index\nfiles in repositories it merely inspects, which is why it avoids opening stores. So the fix is not to open stores; it is\nto apply the same inheritance to the file read, and to say so in the output: \"satisfied by chains inherited from the\nsuite root\" rather than silence when the finding is suppressed.\n\nSCOPE NOW: one function, one output line, and the honesty that an audit reporting a file should not describe what the\nverifier will do with it.\n\nFIXED AND PROVEN 2026-11-08 (ca3ce90). The workspace audit applies the same inheritance `verify` does, and names it:\n\n  before: common: warning: verification_commands is empty ... falls back to `cargo test`    (1 finding)\n  after:  note: common declares no verification chains of its own; it uses the suite root's, as does `storypole verify`\n          11 repositories audited, 0 finding(s), 0 error(s)\n\nThe audit still reads files rather than opening stores, for the reason its own comment gives - it must not leave index\nfiles in repositories it merely inspects - so the fix was to inherit on the read, not to change how it reads.\n\nA suppressed finding is named rather than silenced. That was the whole complaint: two readers of one setting disagreed,\nand the one reporting the file described what the other would do with it.",
+      "priority": null,
+      "scope": null,
+      "acceptance_criteria": null,
+      "timestamp_ms": 1794275392401
+    }
+  ]
 }

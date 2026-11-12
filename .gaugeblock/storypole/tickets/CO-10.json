@@ -4,9 +4,9 @@
     "ticket_key": "CO-10",
     "slug": "add-the-repository-to-the-telemetry-span-contract-5fdbec",
     "title": "Add the repository to the telemetry span contract",
-    "description": "TelemetrySpan carries span_id, trace_id, parent_span_id, binary, command, task_key, branch, status, started_at_ms, duration_ms and first_diagnostic, and no repository. Federation encoded ownership in the log path, so rooting telemetry at the suite deletes that encoding: one log could no longer say which repository a miter run touched, and branch does not disambiguate two worktrees on one branch name. Add repo. Also populate task_key where a span is opened: sawhorse completion_span sets command and never task_key, so both spans currently on disk carry neither field and the join to the spool sits at zero coverage. This is a contract change under ADR 0002 and lands before the writer moves.",
+    "description": "TelemetrySpan carries span_id, trace_id, parent_span_id, binary, command, task_key, branch, status, started_at_ms, duration_ms and first_diagnostic, and no repository. Federation encoded ownership in the log path, so rooting telemetry at the suite deletes that encoding: one log could no longer say which repository a miter run touched, and branch does not disambiguate two worktrees on one branch name. Add repo. Also populate task_key where a span is opened: sawhorse completion_span sets command and never task_key, so both spans currently on disk carry neither field and the join to the spool sits at zero coverage. This is a contract change under ADR 0002 and lands before the writer moves.\n\nDONE 2026-11-08 (commit 29f9f87, common).\n\nTelemetrySpan carries repo: Option<String>, omitted when absent. Two tests: a span with a repository round-trips it,\nand one without omits the key rather than writing null.\n\nThis is the field the unified writer needs: the path used to encode the repository and rooting the writer at the suite\ndeletes that encoding, so without it a single log cannot answer which repository a miter run touched - and a branch\nname does not disambiguate two worktrees on the same branch.\n\nStill owed from the telemetry set: CO-11 (root the writer at the suite, delete the federating reader), GB-339 (one\nspan per CLI invocation across nine more tools), BW-33 (test runs must not write the production log), GB-341\n(retention, configurable and tracked separately from the ephemeral log).",
     "kind": "feature",
-    "status": "ready",
+    "status": "verified",
     "priority": 1,
     "scope": {
       "repo": "common",
@@ -24,9 +24,25 @@
     "plan": null,
     "active_claim": null,
     "latest_handoff": null,
-    "verification_receipt": null,
+    "verification_receipt": {
+      "verifier": "storypole-verify:cargo-test-fallback",
+      "command": "cargo test",
+      "exit_code": 0,
+      "diagnostic_count": null,
+      "summary": "[window: no base commit could be named, so this receipt covers HEAD only]\n[fallback: no verification command configured; ran `cargo test`]\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n\nrunning 0 tests\n\ntest result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s\n\n",
+      "verified_at_epoch_ms": 1794247507094,
+      "git_branch": "main",
+      "base_commit_sha": null,
+      "head_commit_sha": "85f61eca2063a77da57e6d60f68fa2bea9a73d39",
+      "commit_shas": [
+        "85f61eca2063a77da57e6d60f68fa2bea9a73d39"
+      ],
+      "repo": "common",
+      "chain_key": null
+    },
     "created_at_epoch_ms": 1794167026778,
-    "updated_at_epoch_ms": 1794167026778
+    "updated_at_epoch_ms": 1794343396960,
+    "archived_at_epoch_ms": 1794343396960
   },
   "events": [
     {

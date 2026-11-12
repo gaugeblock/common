@@ -48,7 +48,8 @@
       "chain_key": "common"
     },
     "created_at_epoch_ms": 1794108393706,
-    "updated_at_epoch_ms": 1794110649343
+    "updated_at_epoch_ms": 1794343399746,
+    "archived_at_epoch_ms": 1794343399746
   },
   "events": [
     {
