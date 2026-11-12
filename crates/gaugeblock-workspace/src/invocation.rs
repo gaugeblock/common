@@ -53,6 +53,23 @@ impl InvocationSpan {
     /// operations that happen to share an executable.
     #[must_use]
     pub fn start(binary: &str, command: Option<&str>) -> Self {
+        Self::start_attributed(binary, command, None)
+    }
+
+    /// Opens a span that also names the ticket the work belongs to (`GB-356`).
+    ///
+    /// Caller-supplied rather than resolved, and that is a finding rather than a shortcut: the suite
+    /// records 217 claims and most carry no branch, so there is nothing ambient to match a running
+    /// process against - two agents can hold claims in one suite at once, and a tool cannot tell which of
+    /// them it is. A tool that has been told which ticket it is working on can say so; a tool that has not
+    /// must not guess, because a wrong `task_key` is worse for the training corpus than an absent one.
+    #[must_use]
+    pub fn start_for_task(binary: &str, command: Option<&str>, task_key: &str) -> Self {
+        Self::start_attributed(binary, command, Some(task_key))
+    }
+
+    /// The one place a span is built, so both entry points share the policy and the id rules.
+    fn start_attributed(binary: &str, command: Option<&str>, task_key: Option<&str>) -> Self {
         // The policy is consulted here, at the entry point, because `SpanGuard::open` takes a path and writes -
         // it has no opinion about whether writing is allowed. Without this line the whole emission policy was
         // inert on the only production path: `SP-2`'s config switch did nothing, and `GAUGEBLOCK_NO_TELEMETRY`
@@ -78,6 +95,7 @@ impl InvocationSpan {
         span.command = command.map(str::to_string);
         span.repo = repository_of(&cwd);
         span.branch = branch_of(&cwd);
+        span.task_key = task_key.map(str::to_string);
         Self {
             guard: Some(SpanGuard::open(sink, span)),
         }
