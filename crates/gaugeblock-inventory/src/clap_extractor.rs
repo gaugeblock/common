@@ -34,13 +34,30 @@ fn scan_dir_for_cli(dir: &Path, binary_name: &str, commands: &mut Vec<CliCommand
     for entry in entries.flatten() {
         let path = entry.path();
         if path.is_dir() {
-            scan_dir_for_cli(&path, binary_name, commands);
+            // An integration `tests/` directory holds fixtures, not the program's interface (`CH-9`).
+            if path.file_name().and_then(|n| n.to_str()) != Some("tests") {
+                scan_dir_for_cli(&path, binary_name, commands);
+            }
         } else if path.extension().and_then(|s| s.to_str()) == Some("rs")
+            && !is_test_source(&path)
             && let Ok(content) = fs::read_to_string(&path)
         {
             parse_cli_file(&content, binary_name, commands);
         }
     }
+}
+
+/// Whether a source file is test-only, by this suite's naming convention (`CH-9`).
+///
+/// The inventory counted clap fixtures written inside `src/**/tests.rs` as real subcommands, which is how a
+/// repository with no binary at all was told its README was missing documentation for `scaffold` - the
+/// literal came from a clap test fixture, not from a command anyone could run. Naming is the signal because
+/// this suite keeps unit tests in `tests.rs` or `<module>_tests.rs`; an integration `tests/` directory sits
+/// outside `src` and is never scanned.
+fn is_test_source(path: &Path) -> bool {
+    path.file_stem()
+        .and_then(|stem| stem.to_str())
+        .is_some_and(|stem| stem == "tests" || stem.ends_with("_tests"))
 }
 
 fn parse_cli_file(content: &str, binary_name: &str, commands: &mut Vec<CliCommandInventory>) {

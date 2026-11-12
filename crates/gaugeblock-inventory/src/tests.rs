@@ -82,6 +82,34 @@ fn test_cli_extractor_subcommands() {
 }
 
 #[test]
+fn test_cli_extractor_ignores_test_sources() {
+    // CH-9: a clap fixture inside `src/tests.rs` was harvested as a real subcommand, so a crate with no
+    // binary at all was told its README lacked documentation for `scaffold`.
+    let tmp = TempDir::new("cli-tests");
+    let root = tmp.path();
+    let src = root.join("src");
+    fs::create_dir_all(&src).unwrap();
+
+    let real: &str = include_str!("fixtures/cli_enum.txt");
+    fs::write(src.join("cli.rs"), real).unwrap();
+    fs::write(src.join("tests.rs"), real).unwrap();
+    fs::write(src.join("rules_tests.rs"), real).unwrap();
+    let integration = src.join("tests");
+    fs::create_dir_all(&integration).unwrap();
+    fs::write(integration.join("fixture.rs"), real).unwrap();
+
+    let cmds = extract_cli_inventory(root, "mytool", &[Path::new("src")]);
+
+    assert_eq!(
+        cmds.len(),
+        2,
+        "only the two commands from src/cli.rs, not the six copies of the fixture"
+    );
+    let paths: Vec<&Vec<String>> = cmds.iter().map(|c| &c.subcommand_path).collect();
+    assert!(paths.iter().all(|path| path.len() == 1));
+}
+
+#[test]
 fn test_public_types_extractor() {
     let tmp = TempDir::new("types");
     let root = tmp.path();
