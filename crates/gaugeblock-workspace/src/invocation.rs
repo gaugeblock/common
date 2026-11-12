@@ -17,6 +17,28 @@ use uuid::Uuid;
 
 use crate::{GaugeblockPaths, Membership, SpanGuard, ambient_trace_id, now_ms};
 
+/// Where a process should read or write the spool outbox (`GB-304`, `GB-305`).
+///
+/// The sibling of [`sink_path`], for the other derived artefact: `sink_path` answers for the telemetry log,
+/// this for `spool/outbox.jsonl`, where verification traces land. Same rule, and it needs stating twice
+/// because the two questions were answered inconsistently: `sawhorse` asks `sink_path` and gets the suite,
+/// while `rabbet ingest` asked `GaugeblockPaths::discover` and got the repository it was standing in - which
+/// resolves through the *git common dir* and therefore never leaves the member. A member's own spool is
+/// empty, so ingesting from a member read nothing and reported nothing wrong.
+///
+/// Falls back to the repository's own spool when no declared suite lists the caller, and `None` outside any
+/// checkout, exactly as [`sink_path`] does and for the same reasons.
+#[must_use]
+pub fn outbox_path(start: &Path) -> Option<PathBuf> {
+    let canonical = std::fs::canonicalize(start).unwrap_or_else(|_| start.to_path_buf());
+    if let Some(membership) = Membership::containing(&canonical) {
+        return Some(GaugeblockPaths::at(&membership.suite_root).outbox());
+    }
+    GaugeblockPaths::discover(&canonical)
+        .ok()
+        .map(|paths| paths.outbox())
+}
+
 /// Where this process should append spans (`GB-338`).
 ///
 /// Telemetry is **derived, untracked** state, so it centralises: a suite of twelve repositories has one log, at the
