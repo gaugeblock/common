@@ -106,6 +106,18 @@ impl SuiteConfig {
             .and_then(toml::Value::as_bool)
     }
 
+    /// An integer value from `[section] key`, when it is stated as an integer (`GB-344`).
+    ///
+    /// `None` for an absent key and for a value of another type, on the same reasoning as [`Self::boolean`]:
+    /// absence and a malformed value both mean "the caller's default", and a string that looks like a number
+    /// is a configuration mistake the owning tool can report in its own voice rather than a silent coercion.
+    #[must_use]
+    pub fn integer(&self, section: &str, key: &str) -> Option<i64> {
+        self.section(section)
+            .and_then(|table| table.get(key))
+            .and_then(toml::Value::as_integer)
+    }
+
     /// The names of every configured tool, sorted.
     #[must_use]
     pub fn sections(&self) -> Vec<&str> {

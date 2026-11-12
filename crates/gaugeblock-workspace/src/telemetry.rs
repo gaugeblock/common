@@ -72,6 +72,10 @@ pub fn append_span(path: &Path, span: &TelemetrySpan) -> std::io::Result<()> {
 ///
 /// [`std::io::Error`] when the span cannot be serialised, the directory cannot be created, or the append fails.
 pub fn append_span_forced(path: &Path, span: &TelemetrySpan) -> std::io::Result<()> {
+    // Rotation happens before the append, so the file that grows is the current one (`GB-344`). It never
+    // fails the caller: a rotation that cannot happen is "no rotation", which is the same fail-open rule
+    // the rest of emission follows.
+    retention::rotate_if_needed(path);
     let line = serde_json::to_string(span).map_err(std::io::Error::other)?;
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
@@ -153,5 +157,7 @@ impl Drop for SpanGuard {
 }
 
 mod policy;
+pub mod retention;
 
 pub use self::policy::{NO_TELEMETRY_ENV, emission_enabled};
+pub use self::retention::{Retention, aggregates_path, retention_for, rotate_if_needed};
