@@ -5,3 +5,8 @@ target/
 # Flight-recorder spans (GB-243): one append-only log plus its index. Machine state, not source;
 # the schema they follow lives in gaugeblock-contracts.
 .gaugeblock/telemetry/
+
+# miter index database (derived, rebuilt by `miter index`). The declarative TOML beside it is tracked,
+# for the same reason it is at the suite root: allowlists are gate inputs.
+.gaugeblock/miter/*
+!.gaugeblock/miter/*.toml
